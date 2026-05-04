@@ -1,0 +1,202 @@
+import { useMemo, useState } from "react";
+import { KpiCard } from "../components/KpiCard";
+import {
+  HorizontalBarChart,
+  MapPlaceholder,
+} from "../components/TonghabCharts";
+import { TonghabTable } from "../components/TonghabTable";
+import { StationListSidebar } from "../components/StationListSidebar";
+import { StationDetailSidebar } from "../components/StationDetailSidebar";
+import {
+  tonghabMockData,
+  getKpiData,
+  getLeaseTypeData,
+  getGeneratorData,
+  getStationGradeData,
+  getBatteryData,
+  TonghabStation,
+} from "../data/tonghabMockData";
+
+interface TonghabPageProps {
+  region: "central" | "west";
+}
+
+export function TonghabPage({ region }: TonghabPageProps) {
+  const [isListSidebarOpen, setIsListSidebarOpen] = useState(false);
+  const [isDetailSidebarOpen, setIsDetailSidebarOpen] = useState(false);
+  const [selectedStation, setSelectedStation] = useState<TonghabStation | null>(null);
+  const [sidebarStations, setSidebarStations] = useState<TonghabStation[]>([]);
+  const [sidebarTitle, setSidebarTitle] = useState("");
+
+  // 선택된 네트워크 담당의 데이터만 필터링
+  const filteredData = useMemo(
+    () =>
+      tonghabMockData.filter(
+        (station) => station.networkDivision === region,
+      ),
+    [region],
+  );
+
+  const kpiData = getKpiData(filteredData);
+  const leaseData = getLeaseTypeData(filteredData);
+  const generatorData = getGeneratorData(filteredData);
+  const gradeData = getStationGradeData(filteredData);
+  const batteryData = getBatteryData(filteredData);
+
+  const handleAllStationsClick = () => {
+    setSidebarStations(filteredData);
+    setSidebarTitle("전체 국사 목록");
+    setIsListSidebarOpen(true);
+  };
+
+  const handleNormalStationsClick = () => {
+    setSidebarStations(filteredData.filter((s) => s.status === "정상"));
+    setSidebarTitle("정상 운용 항목");
+    setIsListSidebarOpen(true);
+  };
+
+  const handleInspectionStationsClick = () => {
+    setSidebarStations(filteredData.filter((s) => s.status === "점검필요"));
+    setSidebarTitle("점검 필요 항목");
+    setIsListSidebarOpen(true);
+  };
+
+  const handleUrgentStationsClick = () => {
+    setSidebarStations(filteredData.filter((s) => s.status === "긴급"));
+    setSidebarTitle("긴급 점검 필요 항목");
+    setIsListSidebarOpen(true);
+  };
+
+  const handleStationClick = (station: TonghabStation) => {
+    setSelectedStation(station);
+    setIsDetailSidebarOpen(true);
+  };
+
+  const handleCloseListSidebar = () => {
+    setIsListSidebarOpen(false);
+  };
+
+  const handleCloseDetailSidebar = () => {
+    setIsDetailSidebarOpen(false);
+  };
+
+  return (
+    <div className="h-full flex flex-col gap-3.5 overflow-hidden">
+      {/* KPI 카드 */}
+      <div className="grid grid-cols-4 gap-2.5 flex-shrink-0">
+        <KpiCard
+          label="운용중 / 폐국 진행중"
+          value={`${kpiData.operating} / ${kpiData.closing}`}
+          unit=""
+          yoy={3.2}
+          onClick={handleAllStationsClick}
+        />
+        <KpiCard
+          label="정상 운용"
+          value={kpiData.normal}
+          unit="개"
+          yoy={5.1}
+          onClick={handleNormalStationsClick}
+        />
+        <KpiCard
+          label="점검 필요"
+          value={kpiData.needsInspection}
+          unit="개"
+          yoy={2.3}
+          onClick={handleInspectionStationsClick}
+        />
+        <KpiCard
+          label="긴급 점검 필요"
+          value={kpiData.urgent}
+          unit="개"
+          yoy={-12.5}
+          onClick={handleUrgentStationsClick}
+        />
+      </div>
+
+      {/* 지도 + 차트 영역 */}
+      <div className="grid grid-cols-12 gap-2.5 flex-shrink-0">
+        {/* 지도 - 6fr */}
+        <div className="col-span-6">
+          <MapPlaceholder
+            stationCount={filteredData.length}
+            stations={filteredData.map((s) => ({
+              id: s.id,
+              name: s.name,
+              lat: s.lat,
+              lng: s.lng,
+              status: s.status,
+            }))}
+          />
+        </div>
+
+        {/* 차트 영역 - 6fr */}
+        <div className="col-span-6">
+          <div className="bg-white rounded-lg shadow-sm p-3.5 h-full">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                <div
+                  className="w-0.5 h-3 rounded"
+                  style={{
+                    backgroundColor: "var(--region-primary)",
+                  }}
+                />
+                현황 분석
+              </div>
+            </div>
+            <div className="space-y-4">
+              <HorizontalBarChart
+                title="임차 형태"
+                data={leaseData}
+              />
+              <HorizontalBarChart
+                title="발전기 현황"
+                data={generatorData}
+              />
+              <HorizontalBarChart
+                title="국사 등급"
+                data={gradeData}
+              />
+              <HorizontalBarChart
+                title="축전지"
+                data={batteryData}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 국사 세부 현황 */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 flex-shrink-0">
+          <div
+            className="w-0.5 h-4 rounded"
+            style={{ backgroundColor: "var(--region-primary)" }}
+          />
+          국사 세부 현황
+          <span className="text-xs text-gray-400 font-normal ml-auto">
+            주소, Moderniza 현황 등
+          </span>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <TonghabTable data={filteredData} onStationClick={handleStationClick} />
+        </div>
+      </div>
+
+      {/* List Sidebar */}
+      <StationListSidebar
+        stations={sidebarStations}
+        isOpen={isListSidebarOpen}
+        onClose={handleCloseListSidebar}
+        title={sidebarTitle}
+      />
+
+      {/* Detail Sidebar */}
+      <StationDetailSidebar
+        station={selectedStation}
+        isOpen={isDetailSidebarOpen}
+        onClose={handleCloseDetailSidebar}
+      />
+    </div>
+  );
+}

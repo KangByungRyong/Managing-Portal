@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Network 경영 포털 — 현황 (Drill Down 사이드바)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════
+   CSS 변수
+══════════════════════════════════════ */
+:root {
+  --font-kr:'Noto Sans KR',sans-serif;
+  --font-num:'Inter',sans-serif;
+  --white:#FFFFFF;
+  --gray-900:#1A1A1A;
+  --gray-700:#3D3D3D;
+  --gray-500:#767676;
+  --gray-300:#C4C4C4;
+  --gray-100:#F5F5F5;
+  --gray-50:#FAFAFA;
+  --ok:#00A86B;
+  --warn:#FF7A00;
+  --danger:#EA002C;
+  --region-primary:#3617CE;
+  --region-dark:#270FA8;
+  --region-light:#EEF0FF;
+  --region-border:#D8DBFF;
+  --sidebar-width:480px;
+}
+[data-region="서부"] {
+  --region-primary:#FF7A00;
+  --region-dark:#D96500;
+  --region-light:#FFF3E0;
+  --region-border:#FFD9B3;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-kr);background:var(--gray-100);color:var(--gray-900);font-size:14px;}
+
+/* ══════════════════════════════════════
+   Query Loading
+══════════════════════════════════════ */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,26,.55);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center;}
+.loading-overlay.active{display:flex;}
+.loading-modal{background:var(--white);border-radius:16px;padding:36px 44px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);border-top:4px solid var(--region-primary);animation:modalIn .25s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(-12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.loading-db-icon{width:52px;height:52px;border-radius:14px;background:var(--region-light);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.loading-title{font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:5px;}
+.loading-sub{font-size:12px;color:var(--gray-500);margin-bottom:20px;line-height:1.6;}
+.loading-sub span{font-weight:700;color:var(--region-primary);}
+.dot-track{display:flex;justify-content:center;gap:7px;margin-bottom:18px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--region-border);animation:dotB 1.2s ease-in-out infinite;}
+.dot:nth-child(1){animation-delay:0s}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}.dot:nth-child(4){animation-delay:.6s}.dot:nth-child(5){animation-delay:.8s}
+@keyframes dotB{0%,80%,100%{background:var(--region-border);transform:scale(1)}40%{background:var(--region-primary);transform:scale(1.4)}}
+.progress-track{height:4px;background:var(--gray-100);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--region-primary),var(--region-dark));border-radius:99px;width:0%;transition:width .3s ease;}
+.progress-pct{font-family:var(--font-num);font-size:11px;color:var(--gray-500);text-align:right;margin-top:5px;}
+
+/* ══════════════════════════════════════
+   헤더
+══════════════════════════════════════ */
+.header{display:flex;align-items:center;background:var(--gray-900);color:var(--white);padding:0 24px;height:52px;position:fixed;top:0;width:100%;z-index:200;gap:12px;}
+.logo-wrap{display:flex;align-items:center;gap:8px;margin-right:12px;}
+.logo-mark{width:28px;height:28px;border-radius:6px;background:var(--region-primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-num);font-weight:700;font-size:13px;color:var(--white);transition:background .3s;}
+.logo-text{font-size:14px;font-weight:700;}
+.logo-div{width:1px;height:16px;background:#444;margin:0 8px;}
+.portal-name{font-size:12px;color:var(--gray-300);}
+.region-switcher{display:flex;align-items:center;background:rgba(255,255,255,.08);border-radius:7px;padding:3px;gap:2px;}
+.region-tab{padding:4px 14px;border-radius:5px;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:var(--font-kr);white-space:nowrap;}
+.region-tab:hover{color:rgba(255,255,255,.8);}
+.region-tab.active{background:var(--region-primary);color:var(--white);font-weight:700;}
+.region-tab.disabled{opacity:.3;cursor:not-allowed;}
+.sso-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.5);}
+.sso-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.header-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.header-time{font-family:var(--font-num);font-size:11px;color:rgba(255,255,255,.35);}
+.user-info{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.6);}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:var(--region-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--white);transition:background .3s;}
+
+/* ══════════════════════════════════════
+   네비게이션
+══════════════════════════════════════ */
+.nav-lv1{display:flex;background:var(--white);padding:0 24px;position:fixed;top:52px;width:100%;z-index:199;border-bottom:1px solid var(--gray-300);box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.nav-lv1 .t1{padding:12px 20px;font-size:13px;font-weight:500;color:var(--gray-500);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+.nav-lv1 .t1.active{color:var(--region-primary);border-bottom-color:var(--region-primary);font-weight:700;}
+.nav-lv2{display:flex;align-items:center;background:var(--region-light);padding:7px 24px;position:fixed;top:96px;width:100%;z-index:198;border-bottom:1px solid var(--region-border);gap:5px;transition:background .3s,border-color .3s;}
+.nav-lv2 .t2{padding:5px 14px;font-size:12px;font-weight:500;color:var(--region-primary);cursor:pointer;border-radius:18px;border:1px solid transparent;transition:all .2s;}
+.nav-lv2 .t2.active{background:var(--region-primary);color:var(--white);font-weight:700;}
+.nav-lv2 .t2:hover{background:var(--white);border-color:var(--region-primary);}
+.nav-lv2 .t2.tbd{opacity:.4;cursor:not-allowed;}
+.region-badge-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--region-primary);font-weight:600;}
+.region-areas-txt{font-size:11px;color:var(--gray-500);font-weight:400;}
+
+/* ══════════════════════════════════════
+   콘텐츠 — 사이드바 오픈 시 우측 축소
+══════════════════════════════════════ */
+.content{
+  margin-top:140px;
+  padding:16px 24px;
+  transition:margin-right .35s cubic-bezier(.4,0,.2,1);
+}
+
+/* ══════════════════════════════════════
+   드릴다운 사이드바
+══════════════════════════════════════ */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background: rgba(26,26,26,.45);
+  z-index:400;
+  cursor:pointer;
+}
+.sidebar-overlay.active{display:block;}
+
+.sidebar{
+  position:fixed;top:0;right:0;
+  width:var(--sidebar-width);
+  height:100vh;
+  background:var(--white);
+  z-index:500;
+  display:flex;flex-direction:column;
+  box-shadow:-8px 0 40px rgba(0,0,0,.15);
+  transform:translateX(100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.open{transform:translateX(0);}
+
+/* 사이드바 헤더 */
+.sb-header{
+  display:flex;align-items:center;
+  padding:16px 20px;
+  border-bottom:1px solid var(--gray-100);
+  background:var(--region-light);
+  flex-shrink:0;
+  transition:background .3s;
+}
+.sb-back{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--white);border:1px solid var(--region-border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;margin-right:12px;
+  transition:all .15s;flex-shrink:0;
+}
+.sb-back:hover{background:var(--region-primary);color:var(--white);border-color:var(--region-primary);}
+.sb-title-wrap{flex:1;min-width:0;}
+.sb-title{font-size:15px;font-weight:700;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-subtitle{font-size:11px;color:var(--gray-500);margin-top:2px;}
+.sb-badge{
+  flex-shrink:0;
+  padding:4px 10px;border-radius:10px;
+  font-size:11px;font-weight:700;
+  background:var(--region-primary);color:var(--white);
+  margin-left:10px;
+}
+
+/* 사이드바 탭 */
+.sb-tabs{
+  display:flex;padding:0 20px;
+  border-bottom:1px solid var(--gray-100);
+  flex-shrink:0;background:var(--white);
+}
+.sb-tab{
+  padding:10px 14px;font-size:12px;font-weight:500;
+  color:var(--gray-500);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;
+  white-space:nowrap;
+}
+.sb-tab.active{color:var(--region-primary);border-bottom-color:var(--region-primary);font-weight:700;}
+
+/* 사이드바 본문 */
+.sb-body{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--gray-300) transparent;
+}
+.sb-body::-webkit-scrollbar{width:4px;}
+.sb-body::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:2px;}
+
+/* 사이드바 섹션 */
+.sb-section{margin-bottom:20px;}
+.sb-section-title{
+  font-size:11px;font-weight:700;
+  color:var(--gray-500);
+  text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:10px;padding-bottom:6px;
+  border-bottom:1px solid var(--gray-100);
+}
+
+/* 정보 그리드 */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.info-item{background:var(--gray-50);border-radius:8px;padding:10px 12px;}
+.info-label{font-size:10px;color:var(--gray-500);font-weight:600;margin-bottom:4px;}
+.info-value{font-size:14px;font-weight:700;color:var(--gray-900);font-family:var(--font-num);}
+.info-value.highlight{color:var(--region-primary);}
+.info-value.ok    {color:var(--ok);}
+.info-value.warn  {color:var(--warn);}
+.info-value.danger{color:var(--danger);}
+
+/* 상태 타임라인 */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:12px;padding:8px 0;}
+.tl-item:not(:last-child){border-bottom:1px dashed var(--gray-100);}
+.tl-dot-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.tl-line{width:1px;flex:1;background:var(--gray-100);margin-top:4px;}
+.tl-content{flex:1;min-width:0;}
+.tl-date{font-size:10px;color:var(--gray-300);font-family:var(--font-num);margin-bottom:2px;}
+.tl-text{font-size:12px;color:var(--gray-700);line-height:1.5;}
+.tl-author{font-size:10px;color:var(--gray-300);margin-top:2px;}
+
+/* 사이드바 내 차트 */
+.sb-chart-wrap{position:relative;height:160px;margin-bottom:4px;}
+
+/* 사이드바 내 테이블 */
+.sb-table{width:100%;border-collapse:collapse;font-size:11px;}
+.sb-table th{background:var(--region-light);color:var(--region-primary);font-weight:700;padding:7px 10px;text-align:left;border-bottom:2px solid var(--region-primary);white-space:nowrap;transition:background .3s,color .3s;}
+.sb-table td{padding:7px 10px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);}
+.sb-table tr:hover td{background:var(--region-light);}
+
+/* 배지 */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge.ok     {background:#E6F7F1;color:var(--ok);}
+.badge.warn   {background:#FFF3E0;color:var(--warn);}
+.badge.danger {background:#FFF0F1;color:var(--danger);}
+.badge.blue   {background:var(--region-light);color:var(--region-primary);}
+.badge.g5     {background:#F3F0FF;color:#8B5CF6;}
+.badge.lte    {background:#EFF6FF;color:#3B82F6;}
+.badge.g3     {background:#F3F4F6;color:#6B7280;}
+
+/* 사이드바 푸터 */
+.sb-footer{
+  padding:12px 20px;
+  border-top:1px solid var(--gray-100);
+  display:flex;gap:8px;flex-shrink:0;
+  background:var(--white);
+}
+.sb-btn{
+  flex:1;padding:9px;border-radius:7px;
+  font-size:12px;font-weight:700;
+  font-family:var(--font-kr);cursor:pointer;
+  transition:all .2s;border:none;
+}
+.sb-btn.primary{background:var(--region-primary);color:var(--white);}
+.sb-btn.primary:hover{background:var(--region-dark);}
+.sb-btn.secondary{background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);}
+.sb-btn.secondary:hover{background:var(--gray-300);}
+
+/* ══════════════════════════════════════
+   메인 콘텐츠 카드/테이블
+══════════════════════════════════════ */
+.filter-bar{display:flex;gap:12px;align-items:center;background:var(--white);padding:10px 16px;border-radius:8px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid var(--region-primary);transition:border-color .3s;}
+.filter-bar label{font-size:11px;color:var(--gray-500);font-weight:700;}
+.filter-bar select{padding:4px 9px;border:1px solid var(--gray-300);border-radius:5px;font-size:12px;color:var(--gray-700);font-family:var(--font-kr);background:var(--gray-100);cursor:pointer;}
+.filter-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.data-badge{background:var(--region-light);color:var(--region-primary);border:1px solid var(--region-border);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;transition:all .3s;}
+.update-btn{background:var(--region-primary);color:var(--white);border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;font-family:var(--font-kr);cursor:pointer;transition:background .2s;}
+.update-btn:hover{background:var(--region-dark);}
+.update-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px;margin-top:16px;}
+.section-title::before{content:'';display:inline-block;width:3px;height:15px;background:var(--region-primary);border-radius:2px;transition:background .3s;}
+.section-title:first-child{margin-top:0;}
+.section-sub{font-size:11px;color:var(--gray-300);font-weight:400;margin-left:auto;}
+
+.kpi-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+.kpi-card{background:var(--white);border-radius:9px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:3px solid var(--region-primary);cursor:pointer;transition:all .2s;}
+.kpi-card:hover{box-shadow:0 5px 16px rgba(0,0,0,.12);transform:translateY(-2px);}
+.kpi-card.ok{border-top-color:var(--ok);}
+.kpi-card.warn{border-top-color:var(--warn);}
+.kpi-card.danger{border-top-color:var(--danger);}
+.kpi-label{font-size:11px;color:var(--gray-500);margin-bottom:6px;font-weight:500;}
+.kpi-value{font-family:var(--font-num);font-size:26px;font-weight:700;color:var(--gray-900);}
+.kpi-unit{font-size:12px;color:var(--gray-500);margin-left:2px;}
+.kpi-src{font-size:10px;color:var(--gray-300);margin-top:4px;}
+
+.map-chart-row{display:grid;grid-template-columns:5fr 2fr 3fr;gap:10px;margin-bottom:12px;}
+.card{background:var(--white);border-radius:9px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.card-title{font-size:12px;font-weight:700;color:var(--gray-700);display:flex;align-items:center;gap:7px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:13px;background:var(--region-primary);border-radius:2px;transition:background .3s;}
+.card-src{font-size:10px;color:var(--gray-300);}
+.chart-wrap{position:relative;height:180px;}
+
+/* 지도 Mock */
+.map-wrap{position:relative;height:300px;background:linear-gradient(135deg,#E8F4FD,#D6EAF8 50%,#EBF5FB);border-radius:8px;overflow:hidden;border:1px solid var(--region-border);}
+.map-bg-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--region-primary);opacity:.2;font-size:13px;font-weight:700;gap:6px;}
+.map-pin{position:absolute;width:11px;height:11px;border-radius:50%;border:2px solid var(--white);box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;transition:transform .15s;transform:translate(-50%,-50%);}
+.map-pin:hover{transform:translate(-50%,-50%) scale(1.7);}
+.map-pin.op   {background:var(--region-primary);}
+.map-pin.close{background:var(--warn);}
+.map-pin.issue{background:var(--danger);animation:pinPulse 1.5s infinite;}
+@keyframes pinPulse{0%,100%{box-shadow:0 0 0 0 rgba(234,0,44,.4)}50%{box-shadow:0 0 0 7px rgba(234,0,44,0)}}
+.map-legend{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.92);border-radius:7px;padding:8px 12px;font-size:11px;display:flex;flex-direction:column;gap:5px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.legend-item{display:flex;align-items:center;gap:6px;color:var(--gray-700);}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.map-counter{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92);border-radius:7px;padding:8px 12px;font-size:11px;display:flex;flex-direction:column;gap:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.mc-row{display:flex;justify-content:space-between;gap:16px;align-items:center;}
+.mc-label{color:var(--gray-500);}
+.mc-val{font-family:var(--font-num);font-weight:700;color:var(--gray-900);}
+.map-tooltip{display:none;position:absolute;background:var(--gray-900);color:var(--white);border-radius:7px;padding:8px 12px;font-size:11px;line-height:1.7;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;z-index:10;white-space:nowrap;border-left:3px solid var(--region-primary);}
+
+/* 임차 바 */
+.lease-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:8px;gap:1px;}
+.lease-seg{height:100%;}
+.lease-legend{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.lease-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--gray-700);}
+.lease-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* 메인 테이블 */
+.table-wrap{overflow-x:auto;}
+table.main-table{width:100%;border-collapse:collapse;font-size:12px;}
+table.main-table th{background:var(--region-light);color:var(--region-primary);font-weight:700;padding:9px 12px;text-align:left;border-bottom:2px solid var(--region-primary);font-size:11px;white-space:nowrap;transition:background .3s,color .3s;}
+table.main-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);white-space:nowrap;}
+table.main-table tr{cursor:pointer;transition:background .15s;}
+table.main-table tr:hover td{background:var(--region-light);}
+table.main-table tr.selected td{background:var(--region-light);font-weight:600;border-left:3px solid var(--region-primary);}
+
+/* 드릴다운 힌트 */
+.drill-hint{font-size:11px;color:var(--gray-300);display:flex;align-items:center;gap:4px;}
+.drill-hint::before{content:'↗';font-size:12px;}
+
+/* 스켈레톤 */
+.sk{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-t{height:12px;margin-bottom:8px;}.sk-v{height:28px;width:50%;margin-bottom:8px;}.sk-s{height:11px;width:35%;}
+/* ══════════════════════════════
+   국사 필터 바 추가 CSS
+══════════════════════════════ */
+.filter-bar-wrap{
+  padding:12px 20px 0;
+  display:flex;flex-direction:column;gap:10px;
+}
+.filter-row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+.search-wrap{position:relative;flex:0 0 220px;}
+.search-wrap input{
+  width:100%;padding:7px 12px 7px 32px;
+  border:1px solid var(--gray-300);border-radius:7px;
+  font-size:12px;font-family:var(--font-kr);
+  color:var(--gray-700);background:var(--gray-50);
+  transition:border-color .2s,box-shadow .2s;outline:none;
+}
+.search-wrap input:focus{
+  border-color:var(--region-primary);
+  box-shadow:0 0 0 3px var(--region-light);
+  background:var(--white);
+}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--gray-300);pointer-events:none;}
+.search-clear{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:11px;cursor:pointer;display:none;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--gray-300);color:var(--white);
+  align-items:center;justify-content:center;font-weight:700;transition:background .15s;
+}
+.search-clear:hover{background:var(--gray-500);}
+.search-clear.visible{display:flex;}
+
+.tag-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.tag-label{font-size:11px;color:var(--gray-500);font-weight:700;white-space:nowrap;}
+.tag{
+  padding:4px 12px;border-radius:14px;font-size:11px;font-weight:600;
+  cursor:pointer;border:1px solid var(--gray-300);
+  background:var(--white);color:var(--gray-500);
+  transition:all .15s;white-space:nowrap;font-family:var(--font-kr);
+}
+.tag:hover{border-color:var(--region-primary);color:var(--region-primary);}
+.tag.active-ok    {background:#E6F7F1;border-color:var(--ok);    color:var(--ok);    font-weight:700;}
+.tag.active-warn  {background:#FFF3E0;border-color:var(--warn);  color:var(--warn);  font-weight:700;}
+.tag.active-danger{background:#FFF0F1;border-color:var(--danger);color:var(--danger);font-weight:700;}
+.tag.active-all   {background:var(--region-light);border-color:var(--region-primary);color:var(--region-primary);font-weight:700;}
+
+.reset-btn{
+  margin-left:auto;padding:5px 12px;border-radius:6px;
+  border:1px solid var(--gray-300);background:var(--white);
+  font-size:11px;color:var(--gray-500);cursor:pointer;
+  font-family:var(--font-kr);font-weight:600;
+  transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:4px;
+}
+.reset-btn:hover{border-color:var(--danger);color:var(--danger);}
+.reset-btn.has-filter{border-color:var(--region-primary);color:var(--region-primary);background:var(--region-light);}
+
+.chip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:0;padding:6px 20px 0;}
+.chip-row:empty{display:none;}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:12px;
+  background:var(--region-light);border:1px solid var(--region-border);
+  font-size:11px;color:var(--region-primary);font-weight:600;
+  animation:chipIn .15s ease;
+}
+@keyframes chipIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.chip-x{cursor:pointer;font-size:12px;font-weight:700;color:var(--region-primary);opacity:.6;transition:opacity .15s;line-height:1;}
+.chip-x:hover{opacity:1;}
+.chip-clear-all{font-size:11px;color:var(--gray-300);cursor:pointer;margin-left:2px;font-weight:600;transition:color .15s;}
+.chip-clear-all:hover{color:var(--danger);}
+
+/* 컬럼 필터 버튼 */
+.th-inner{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;gap:4px;}
+.th-text{flex:1;}
+.col-filter-btn{
+  width:20px;height:20px;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:11px;
+  color:var(--region-primary);opacity:.45;
+  transition:all .15s;flex-shrink:0;border:none;background:transparent;
+}
+.col-filter-btn:hover{opacity:1;background:var(--region-border);}
+.col-filter-btn.active{opacity:1;background:var(--region-primary);color:var(--white);}
+.sort-btn{
+  width:18px;height:18px;border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:10px;color:var(--region-primary);
+  opacity:.4;transition:all .15s;flex-shrink:0;border:none;background:transparent;
+}
+.sort-btn:hover{opacity:1;}
+.sort-btn.asc::after {content:'↑';font-weight:700;opacity:1;}
+.sort-btn.desc::after{content:'↓';font-weight:700;opacity:1;}
+.sort-btn:not(.asc):not(.desc)::after{content:'↕';}
+
+/* 컬럼 드롭다운 */
+.col-dropdown{
+  display:none;position:absolute;top:100%;left:0;
+  background:var(--white);border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+  border:1px solid var(--gray-100);
+  z-index:300;min-width:160px;padding:6px;
+  animation:dropIn .15s ease;
+}
+.col-dropdown.open{display:block;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.col-dd-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:5px;
+  font-size:12px;color:var(--gray-700);
+  cursor:pointer;transition:background .1s;font-family:var(--font-kr);
+}
+.col-dd-item:hover{background:var(--region-light);}
+.col-dd-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--region-primary);cursor:pointer;flex-shrink:0;}
+.col-dd-item.select-all{border-bottom:1px solid var(--gray-100);margin-bottom:4px;padding-bottom:8px;font-weight:700;color:var(--region-primary);}
+.col-dd-apply{margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-100);display:flex;gap:5px;}
+.col-dd-apply button{flex:1;padding:5px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-kr);border:none;transition:all .15s;}
+.col-dd-apply .apply{background:var(--region-primary);color:var(--white);}
+.col-dd-apply .apply:hover{background:var(--region-dark);}
+.col-dd-apply .clear{background:var(--gray-100);color:var(--gray-500);}
+.col-dd-apply .clear:hover{background:var(--gray-300);color:var(--white);}
+
+/* 결과 카운트 + 빈 상태 */
+.table-result-count{
+  font-size:11px;color:var(--gray-500);
+  font-family:var(--font-num);padding:0 20px 8px;
+}
+.table-result-count b{color:var(--region-primary);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray-300);}
+.empty-state .ei{font-size:32px;margin-bottom:8px;}
+.empty-state .et{font-size:13px;font-weight:600;margin-bottom:4px;}
+.empty-state .es{font-size:11px;}
+.empty-state button{
+  margin-top:12px;padding:6px 16px;border-radius:7px;
+  border:1px solid var(--region-border);
+  background:var(--region-light);color:var(--region-primary);
+  font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-kr);
+}
+
+/* 키워드 하이라이트 */
+.hl{background:rgba(54,23,206,.12);border-radius:2px;padding:0 1px;color:var(--region-primary);font-weight:700;}
+
+</style>
+</head>
+<body data-region="중부">
+
+<!-- Query Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-modal">
+    <div class="loading-db-icon">🗄️</div>
+    <div class="loading-title">Query Loading</div>
+    <div class="loading-sub"><span id="loadingRegionLabel">중부 네트워크 담당</span><br>데이터를 조회하고 있습니다...</div>
+    <div class="dot-track"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-pct" id="progressPct">0%</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     드릴다운 사이드바
+══════════════════════════════════════ -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+  <!-- 사이드바 헤더 -->
+  <div class="sb-header">
+    <div class="sb-back" onclick="closeSidebar()">✕</div>
+    <div class="sb-title-wrap">
+      <div class="sb-title" id="sbTitle">국사 세부 현황</div>
+      <div class="sb-subtitle" id="sbSubtitle">통합국 · 세부 정보</div>
+    </div>
+    <div class="sb-badge" id="sbBadge">정상</div>
+  </div>
+
+  <!-- 사이드바 탭 -->
+  <div class="sb-tabs">
+    <div class="sb-tab active" onclick="switchSbTab('기본정보',this)">기본 정보</div>
+    <div class="sb-tab" onclick="switchSbTab('설비현황',this)">설비 현황</div>
+    <div class="sb-tab" onclick="switchSbTab('이력',this)">점검 이력</div>
+    <div class="sb-tab" onclick="switchSbTab('Moderniza',this)">Moderniza</div>
+  </div>
+
+  <!-- 사이드바 본문 -->
+  <div class="sb-body" id="sbBody">
+    <!-- JS로 동적 렌더링 -->
+  </div>
+
+  <!-- 사이드바 푸터 -->
+  <div class="sb-footer">
+    <button class="sb-btn secondary" onclick="closeSidebar()">닫기</button>
+    <button class="sb-btn primary" onclick="alert('점검 요청이 등록되었습니다.')">📋 점검 요청</button>
+    <button class="sb-btn primary" onclick="alert('상세 리포트를 다운로드합니다.')">⬇ 리포트</button>
+  </div>
+</div>
+
+<!-- 헤더 -->
+<header class="header">
+  <div class="logo-wrap">
+    <div class="logo-mark" id="logoMark">T</div>
+    <span class="logo-text">SKT</span>
+    <div class="logo-div"></div>
+    <span class="portal-name">Network 경영 포털</span>
+  </div>
+  <div class="region-switcher">
+    <button class="region-tab active" id="tabJ" onclick="requestSwitch('중부')">🔵 중부</button>
+    <button class="region-tab"        id="tabS" onclick="requestSwitch('서부')">🟠 서부</button>
+    <button class="region-tab disabled">📊 비교</button>
+    <button class="region-tab disabled">🌐 전체</button>
+  </div>
+  <div class="sso-badge">
+    <div class="sso-dot"></div>
+    <span id="ssoBadge">SSO · 중부 네트워크 담당 자동 진입</span>
+  </div>
+  <div class="header-right">
+    <span class="header-time" id="headerTime">기준일시 : --</span>
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">김</div>
+      <span>김담당 · 담당자</span>
+    </div>
+  </div>
+</header>
+
+<!-- 1차 탭 -->
+<nav class="nav-lv1">
+  <div class="t1">🏠 홈</div>
+  <div class="t1 active">📡 현황</div>
+  <div class="t1">📊 지표</div>
+  <div class="t1">🎯 본부 중점</div>
+  <div class="t1">📋 Task</div>
+</nav>
+
+<!-- 2차 탭 -->
+<nav class="nav-lv2">
+  <div class="t2 active">시설 현황</div>
+  <div class="t2 tbd" onclick="alert('준비 중')">재고 현황</div>
+  <div class="t2 tbd" onclick="alert('준비 중')">특화 지표</div>
+  <div class="region-badge-wrap">
+    <span id="regionBadgeLabel">🔵 중부 네트워크 담당</span>
+    <span class="region-areas-txt" id="regionAreas">· 대전 / 세종 / 충남 / 충북</span>
+  </div>
+</nav>
+
+<!-- 콘텐츠 -->
+<main class="content" id="mainContent">
+
+  <!-- 필터 바 -->
+  <div class="filter-bar">
+    <label>기간</label>
+    <select><option>2026년 5월</option><option>2026년 4월</option></select>
+    <label>지역</label>
+    <select id="regionFilter"><option>전체</option></select>
+    <label>조직</label>
+    <select><option>전체</option><option>1팀</option><option>2팀</option></select>
+    <div class="filter-right">
+      <span class="data-badge" id="dataBadge">● SQL · 로딩 중</span>
+      <button class="update-btn" id="updateBtn" onclick="startLoading()">⬆ 데이터 업데이트</button>
+    </div>
+  </div>
+
+  <!-- 3차 탭 -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;">
+    <button class="t3-btn active" id="t3-통합국" onclick="switchSub('통합국')">🏢 통합국 현황</button>
+    <button class="t3-btn" id="t3-기지국" onclick="switchSub('기지국')">📡 기지국 현황</button>
+    <button class="t3-btn" id="t3-중계기" onclick="switchSub('중계기')">📶 중계기 현황</button>
+    <button class="t3-btn tbd3">📻 LoRa / WiFi / Femto</button>
+  </div>
+  <style>
+    .t3-btn{padding:6px 16px;border-radius:20px;border:1px solid var(--region-border);background:var(--white);color:var(--region-primary);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-kr);transition:all .2s;}
+    .t3-btn:hover{background:var(--region-light);}
+    .t3-btn.active{background:var(--region-primary);color:var(--white);border-color:var(--region-primary);}
+    .t3-btn.tbd3{opacity:.4;cursor:not-allowed;}
+  </style>
+
+  <!-- 통합국 현황 -->
+  <div id="sub-통합국">
+    <div class="section-title">운용 통합국 현황 <span class="section-sub">📂 SQL · 일 단위 · 행 클릭 시 세부 정보</span></div>
+    <div class="kpi-grid-4" id="kpi-tonghabguk"></div>
+
+    <div class="map-chart-row">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">통합국 위치 현황</div>
+          <span class="card-src">🗺️ 핀 클릭 → 세부 정보</span>
+        </div>
+        <div class="map-wrap" id="mapWrap">
+          <div class="map-bg-text"><div style="font-size:32px">🗺️</div><div id="mapRegionName">중부권 (대전·세종·충남·충북)</div><div style="font-size:11px;margin-top:4px">Maps API 연동 예정</div></div>
+          <div id="mapPins"></div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--region-primary)"></div>운용 중</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div>폐국 진행</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>이슈 발생</div>
+          </div>
+          <div class="map-counter">
+            <div class="mc-row"><span class="mc-label">운용</span><span class="mc-val" id="mcOp">--</span></div>
+            <div class="mc-row"><span class="mc-label">폐국진행</span><span class="mc-val" id="mcClose">--</span></div>
+            <div class="mc-row"><span class="mc-label">이슈</span><span class="mc-val" id="mcIssue">--</span></div>
+          </div>
+          <div class="map-tooltip" id="mapTooltip"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">임차 형태</div><span class="card-src">📂 SQL</span></div>
+        <div class="lease-bar" id="leaseBar"></div>
+        <div class="lease-legend" id="leaseLegend"></div>
+        <div class="chart-wrap"><canvas id="leaseChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">발전기 설치 현황</div><span class="card-src">📂 SQL</span></div>
+        <div class="chart-wrap"><canvas id="genChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 국사 세부 현황 테이블 -->
+    <!-- 국사 세부 현황 테이블 (필터 포함) -->
+<div class="card" style="margin-bottom:12px;">
+  <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;">
+    <div class="card-title">국사 세부 현황</div>
+    <div class="table-result-count" style="padding:0">
+      총 <b id="totalCount">0</b>개 중 <b id="filteredCount">0</b>개 표시
+    </div>
+  </div>
+
+  <!-- 상단 필터 바 -->
+  <div class="filter-bar-wrap">
+    <div class="filter-row1">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="tblSearchInput" placeholder="국사명 / 주소 검색..."
+               oninput="onTblSearch(this.value)"/>
+        <div class="search-clear" id="tblSearchClear" onclick="clearTblSearch()">✕</div>
+      </div>
+      <div class="tag-group">
+        <span class="tag-label">상태</span>
+        <button class="tag active-all" data-status="all"    onclick="toggleStatusTag(this,'all')">전체</button>
+        <button class="tag"            data-status="ok"     onclick="toggleStatusTag(this,'ok')">✅ 정상</button>
+        <button class="tag"            data-status="warn"   onclick="toggleStatusTag(this,'warn')">⚠️ 점검필요</button>
+        <button class="tag"            data-status="danger" onclick="toggleStatusTag(this,'danger')">🚨 긴급</button>
+      </div>
+      <button class="reset-btn" id="tblResetBtn" onclick="resetTblFilter()">↺ 전체 초기화</button>
+    </div>
+  </div>
+
+  <!-- 활성 필터 칩 -->
+  <div class="chip-row" id="tblChipRow"></div>
+
+  <!-- 테이블 -->
+  <div class="table-wrap" style="padding:10px 20px 20px;">
+    <table class="main-table" id="tonghabgukMainTable">
+      <thead>
+        <tr>
+          <th><div class="th-inner"><span class="th-text">국사명</span>
+            <button class="sort-btn" onclick="sortTbl('name',this)"></button></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">지역</span>
+            <button class="sort-btn" onclick="sortTbl('area',this)"></button>
+            <button class="col-filter-btn" id="cfBtn-area" onclick="toggleColFilter('area',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-area"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">임차형태</span>
+            <button class="col-filter-btn" id="cfBtn-lease" onclick="toggleColFilter('lease',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-lease"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">발전기</span>
+            <button class="col-filter-btn" id="cfBtn-gen" onclick="toggleColFilter('gen',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-gen"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">수전용량</span>
+            <button class="col-filter-btn" id="cfBtn-power" onclick="toggleColFilter('power',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-power"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">국사등급</span>
+            <button class="sort-btn" onclick="sortTbl('grade',this)"></button>
+            <button class="col-filter-btn" id="cfBtn-grade" onclick="toggleColFilter('grade',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-grade"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">축전지</span>
+            <button class="col-filter-btn" id="cfBtn-battery" onclick="toggleColFilter('battery',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-battery"></div></th>
+
+          <th style="position:relative"><div class="th-inner"><span class="th-text">Moderniza</span>
+            <button class="col-filter-btn" id="cfBtn-modern" onclick="toggleColFilter('modern',event)">▾</button></div>
+            <div class="col-dropdown" id="cf-modern"></div></th>
+
+          <th><div class="th-inner"><span class="th-text">상태</span></div></th>
+          <th><div class="th-inner"></div></th>
+        </tr>
+      </thead>
+      <tbody id="tonghabgukTable"></tbody>
+    </table>
+    <div class="empty-state" id="tblEmptyState" style="display:none">
+      <div class="ei">🔍</div>
+      <div class="et">검색 결과가 없습니다</div>
+      <div class="es">필터 조건을 변경하거나 초기화해 주세요</div>
+      <button onclick="resetTblFilter()">↺ 필터 초기화</button>
+    </div>
+  </div>
+</div>
+
+
+  <!-- 기지국 현황 (간략) -->
+  <div id="sub-기지국" style="display:none;">
+    <div class="section-title">기지국 Site 현황 <span class="section-sub">📂 SQL · 일 단위 · 전년 대비 증/감</span></div>
+    <div class="kpi-grid-4" id="kpi-gijiguk"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">기지국 세부 현황</div>
+        <span class="drill-hint">행 클릭 시 드릴다운 사이드바 열림</span>
+      </div>
+      <div class="table-wrap">
+        <table class="main-table">
+          <thead><tr><th>Site명</th><th>지역</th><th>세대</th><th>장비 수</th><th>전년 대비</th><th>최종 점검일</th><th>상태</th><th></th></tr></thead>
+          <tbody id="gijigukTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 중계기 현황 (간략) -->
+  <div id="sub-중계기" style="display:none;">
+    <div class="section-title">중계기 Site 현황 <span class="section-sub">📂 SQL · 일 단위 · 전년 대비 증/감</span></div>
+    <div class="kpi-grid-4" id="kpi-junggye"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">중계기 세부 현황</div>
+        <span class="drill-hint">행 클릭 시 드릴다운 사이드바 열림</span>
+      </div>
+      <div class="table-wrap">
+        <table class="main-table">
+          <thead><tr><th>Site명</th><th>지역</th><th>세대</th><th>장비 수</th><th>전년 대비</th><th>최종 점검일</th><th>상태</th><th></th></tr></thead>
+          <tbody id="junggyeTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ════════════════════════════════
+   데이터
+════════════════════════════════ */
+const REGION = {
+  '중부':{
+    color:'#3617CE',dark:'#270FA8',light:'#EEF0FF',border:'#D8DBFF',
+    emoji:'🔵',areas:['대전','세종','충남','충북'],
+    tonghabguk:{
+      kpi:[
+        {label:'운용 통합국',  val:72,unit:'개',cls:''},
+        {label:'폐국 진행 중', val:5, unit:'개',cls:'warn'},
+        {label:'발전기 설치',  val:58,unit:'개',cls:'ok'},
+        {label:'발전기 미설치',val:14,unit:'개',cls:'danger'},
+      ],
+      lease:{자가:28,무상:18,임차:22,기타:4},
+      pins:[
+        {x:38,y:40,type:'op',   name:'대전 중앙국사',    area:'대전',lease:'자가',gen:'Y',grade:'A',status:'ok'},
+        {x:44,y:33,type:'op',   name:'세종 정부청사국사', area:'세종',lease:'무상',gen:'Y',grade:'B',status:'ok'},
+        {x:28,y:53,type:'op',   name:'충남 천안국사',    area:'충남',lease:'임차',gen:'Y',grade:'B',status:'ok'},
+        {x:55,y:46,type:'op',   name:'충북 청주국사',    area:'충북',lease:'자가',gen:'Y',grade:'A',status:'ok'},
+        {x:32,y:66,type:'close',name:'충남 아산국사',    area:'충남',lease:'임차',gen:'N',grade:'C',status:'warn'},
+        {x:62,y:60,type:'op',   name:'충북 충주국사',    area:'충북',lease:'자가',gen:'Y',grade:'B',status:'ok'},
+        {x:20,y:43,type:'issue',name:'충남 서산국사',    area:'충남',lease:'기타',gen:'N',grade:'D',status:'danger'},
+        {x:48,y:70,type:'op',   name:'충북 제천국사',    area:'충북',lease:'무상',gen:'Y',grade:'C',status:'ok'},
+        {x:70,y:36,type:'op',   name:'충북 음성국사',    area:'충북',lease:'자가',gen:'Y',grade:'B',status:'ok'},
+        {x:25,y:28,type:'close',name:'충남 당진국사',    area:'충남',lease:'임차',gen:'N',grade:'C',status:'warn'},
+      ],
+      table:[
+        {name:'대전 중앙국사',   area:'대전',addr:'대전시 중구 중앙로 1',  lease:'자가',gen:'Y',power:'1000KW 이상',grade:'A',battery:'정상',modern:'진행중',status:'ok',   statusTxt:'정상'},
+        {name:'세종 정부청사국사',area:'세종',addr:'세종시 한누리대로 2130',lease:'무상',gen:'Y',power:'500~1000KW', grade:'B',battery:'정상',modern:'완료',  status:'ok',   statusTxt:'정상'},
+        {name:'충남 천안국사',   area:'충남',addr:'충남 천안시 서북구 번영로 1',lease:'임차',gen:'Y',power:'500~1000KW',grade:'B',battery:'정상',modern:'예정',  status:'ok',   statusTxt:'정상'},
+        {name:'충북 청주국사',   area:'충북',addr:'충북 청주시 상당구 상당로 1',lease:'자가',gen:'Y',power:'1000KW 이상',grade:'A',battery:'정상',modern:'진행중',status:'ok',   statusTxt:'정상'},
+        {name:'충남 아산국사',   area:'충남',addr:'충남 아산시 온천대로 1',lease:'임차',gen:'N',power:'500KW 미만', grade:'C',battery:'교체필요',modern:'미정',status:'warn',  statusTxt:'점검필요'},
+        {name:'충남 서산국사',   area:'충남',addr:'충남 서산시 번영로 1',  lease:'기타',gen:'N',power:'500KW 미만', grade:'D',battery:'불량',  modern:'미정',status:'danger', statusTxt:'긴급'},
+        {name:'충북 충주국사',   area:'충북',addr:'충북 충주시 중앙로 1',  lease:'자가',gen:'Y',power:'500~1000KW', grade:'B',battery:'정상',modern:'완료',  status:'ok',   statusTxt:'정상'},
+        {name:'충북 제천국사',   area:'충북',addr:'충북 제천시 의림대로 1',lease:'무상',gen:'Y',power:'500KW 미만', grade:'C',battery:'정상',modern:'예정',  status:'ok',   statusTxt:'정상'},
+      ],
+    },
+    gijiguk:{
+      kpi:[
+        {label:'전체 Site',val:1284,unit:'개소',cls:'',  yoy:+42},
+        {label:'5G Site', val:856, unit:'개소',cls:'g5', yoy:+68},
+        {label:'LTE Site',val:1102,unit:'개소',cls:'lte',yoy:-12},
+        {label:'3G Site', val:234, unit:'개소',cls:'g3', yoy:-38},
+      ],
+      table:[
+        {name:'대전-001',area:'대전',gen:'5G',equip:8,yoy:'+3',date:'2026-04-28',status:'ok',   statusTxt:'정상'},
+        {name:'세종-002',area:'세종',gen:'LTE',equip:6,yoy:'-1',date:'2026-04-20',status:'ok',   statusTxt:'정상'},
+        {name:'충남-003',area:'충남',gen:'5G',equip:7,yoy:'+2',date:'2026-04-25',status:'warn',  statusTxt:'점검필요'},
+        {name:'충북-004',area:'충북',gen:'3G',equip:4,yoy:'-2',date:'2026-04-15',status:'g3',    statusTxt:'운용중'},
+        {name:'충남-005',area:'충남',gen:'LTE',equip:5,yoy:'0', date:'2026-04-29',status:'ok',   statusTxt:'정상'},
+        {name:'충북-006',area:'충북',gen:'5G',equip:9,yoy:'+4',date:'2026-04-30',status:'ok',   statusTxt:'정상'},
+      ],
+    },
+    junggye:{
+      kpi:[
+        {label:'전체 Site',val:3842,unit:'개소',cls:'',  yoy:+28},
+        {label:'5G Site', val:412, unit:'개소',cls:'g5', yoy:+56},
+        {label:'LTE Site',val:2856,unit:'개소',cls:'lte',yoy:-18},
+        {label:'3G Site', val:574, unit:'개소',cls:'g3', yoy:-42},
+      ],
+      table:[
+        {name:'대전-R001',area:'대전',gen:'LTE',equip:4,yoy:'+1',date:'2026-04-28',status:'ok',  statusTxt:'정상'},
+        {name:'세종-R002',area:'세종',gen:'5G', equip:2,yoy:'+2',date:'2026-04-20',status:'ok',  statusTxt:'정상'},
+        {name:'충남-R003',area:'충남',gen:'LTE',equip:6,yoy:'-1',date:'2026-04-25',status:'warn', statusTxt:'점검필요'},
+        {name:'충북-R004',area:'충북',gen:'3G', equip:3,yoy:'-2',date:'2026-04-15',status:'g3',   statusTxt:'운용중'},
+        {name:'충남-R005',area:'충남',gen:'LTE',equip:5,yoy:'0', date:'2026-04-29',status:'ok',  statusTxt:'정상'},
+      ],
+    },
+  },
+};
+// 서부 데이터는 중부와 동일 구조로 간략 설정
+REGION['서부'] = {
+  color:'#FF7A00',dark:'#D96500',light:'#FFF3E0',border:'#FFD9B3',
+  emoji:'🟠',areas:['전라남도','전라북도','제주'],
+  tonghabguk:{
+    kpi:[
+      {label:'운용 통합국',  val:58,unit:'개',cls:''},
+      {label:'폐국 진행 중', val:3, unit:'개',cls:'warn'},
+      {label:'발전기 설치',  val:44,unit:'개',cls:'ok'},
+      {label:'발전기 미설치',val:14,unit:'개',cls:'danger'},
+    ],
+    lease:{자가:22,무상:14,임차:18,기타:4},
+    pins:[
+      {x:35,y:38,type:'op',   name:'광주 서구국사',  area:'전라남도',lease:'자가',gen:'Y',grade:'A',status:'ok'},
+      {x:42,y:53,type:'op',   name:'전주 완산국사',  area:'전라북도',lease:'무상',gen:'Y',grade:'B',status:'ok'},
+      {x:25,y:60,type:'op',   name:'목포 항구국사',  area:'전라남도',lease:'임차',gen:'Y',grade:'B',status:'ok'},
+      {x:72,y:73,type:'op',   name:'제주 중앙국사',  area:'제주',    lease:'자가',gen:'Y',grade:'A',status:'ok'},
+      {x:30,y:73,type:'close',name:'여수 돌산국사',  area:'전라남도',lease:'임차',gen:'N',grade:'C',status:'warn'},
+      {x:18,y:48,type:'issue',name:'나주 국사',      area:'전라남도',lease:'기타',gen:'N',grade:'D',status:'danger'},
+    ],
+    table:[
+      {name:'광주 서구국사', area:'전라남도',addr:'광주시 서구 상무대로 1',  lease:'자가',gen:'Y',power:'1000KW 이상',grade:'A',battery:'정상',modern:'완료',  status:'ok',   statusTxt:'정상'},
+      {name:'전주 완산국사', area:'전라북도',addr:'전북 전주시 완산구 효자로 1',lease:'무상',gen:'Y',power:'500~1000KW',grade:'B',battery:'정상',modern:'진행중',status:'ok',   statusTxt:'정상'},
+      {name:'목포 항구국사', area:'전라남도',addr:'전남 목포시 항구로 1',    lease:'임차',gen:'Y',power:'500~1000KW',grade:'B',battery:'정상',modern:'예정',  status:'ok',   statusTxt:'정상'},
+      {name:'제주 중앙국사', area:'제주',    addr:'제주시 중앙로 1',         lease:'자가',gen:'Y',power:'1000KW 이상',grade:'A',battery:'정상',modern:'완료',  status:'ok',   statusTxt:'정상'},
+      {name:'나주 국사',     area:'전라남도',addr:'전남 나주시 나주로 1',    lease:'기타',gen:'N',power:'500KW 미만', grade:'D',battery:'불량',  modern:'미정',status:'danger', statusTxt:'긴급'},
+    ],
+  },
+  gijiguk:{
+    kpi:[
+      {label:'전체 Site',val:986, unit:'개소',cls:'',  yoy:+28},
+      {label:'5G Site', val:612, unit:'개소',cls:'g5', yoy:+44},
+      {label:'LTE Site',val:842, unit:'개소',cls:'lte',yoy:-8},
+      {label:'3G Site', val:186, unit:'개소',cls:'g3', yoy:-28},
+    ],
+    table:[
+      {name:'광주-001',area:'전라남도',gen:'5G', equip:7,yoy:'+2',date:'2026-04-28',status:'ok',  statusTxt:'정상'},
+      {name:'전주-002',area:'전라북도',gen:'LTE',equip:5,yoy:'-1',date:'2026-04-20',status:'ok',  statusTxt:'정상'},
+      {name:'목포-003',area:'전라남도',gen:'5G', equip:6,yoy:'+1',date:'2026-04-25',status:'warn', statusTxt:'점검필요'},
+      {name:'제주-004',area:'제주',    gen:'LTE',equip:4,yoy:'0', date:'2026-04-15',status:'ok',  statusTxt:'정상'},
+      {name:'나주-005',area:'전라남도',gen:'3G', equip:3,yoy:'-2',date:'2026-04-29',status:'g3',   statusTxt:'운용중'},
+    ],
+  },
+  junggye:{
+    kpi:[
+      {label:'전체 Site',val:2856,unit:'개소',cls:'',  yoy:+18},
+      {label:'5G Site', val:286, unit:'개소',cls:'g5', yoy:+38},
+      {label:'LTE Site',val:2142,unit:'개소',cls:'lte',yoy:-12},
+      {label:'3G Site', val:428, unit:'개소',cls:'g3', yoy:-32},
+    ],
+    table:[
+      {name:'광주-R001',area:'전라남도',gen:'LTE',equip:4,yoy:'+1',date:'2026-04-28',status:'ok',  statusTxt:'정상'},
+      {name:'전주-R002',area:'전라북도',gen:'5G', equip:2,yoy:'+2',date:'2026-04-20',status:'ok',  statusTxt:'정상'},
+      {name:'목포-R003',area:'전라남도',gen:'LTE',equip:5,yoy:'-1',date:'2026-04-25',status:'warn', statusTxt:'점검필요'},
+      {name:'제주-R004',area:'제주',    gen:'3G', equip:3,yoy:'-1',date:'2026-04-15',status:'g3',   statusTxt:'운용중'},
+    ],
+  },
+};
+
+/* ════════════════════════════════
+   상태
+════════════════════════════════ */
+let currentRegion = '중부';
+let currentSub    = '통합국';
+let chartInst     = {};
+let isLoading     = false;
+let currentSbTab  = '기본정보';
+let currentDrillData = null;
+let currentDrillType = null;
+
+/* ════════════════════════════════
+   테마
+════════════════════════════════ */
+function applyTheme(r) {
+  const c = REGION[r];
+  document.body.setAttribute('data-region', r);
+  const root = document.documentElement;
+  root.style.setProperty('--region-primary', c.color);
+  root.style.setProperty('--region-dark',    c.dark);
+  root.style.setProperty('--region-light',   c.light);
+  root.style.setProperty('--region-border',  c.border);
+  document.getElementById('logoMark').style.background   = c.color;
+  document.getElementById('userAvatar').style.background = c.color;
+  document.getElementById('tabJ').classList.toggle('active', r==='중부');
+  document.getElementById('tabS').classList.toggle('active', r==='서부');
+  document.getElementById('ssoBadge').textContent =
+    `SSO · ${r} 네트워크 담당 ${r==='중부'?'자동 진입':'수동 전환'}`;
+  document.getElementById('regionBadgeLabel').textContent = `${c.emoji} ${r} 네트워크 담당`;
+  document.getElementById('regionAreas').textContent = '· ' + c.areas.join(' / ');
+    document.getElementById('loadingRegionLabel').textContent = `${r} 네트워크 담당`;
+  const sel = document.getElementById('regionFilter');
+  sel.innerHTML = '<option>전체</option>' + c.areas.map(a=>`<option>${a}</option>`).join('');
+  const mn = document.getElementById('mapRegionName');
+  if(mn) mn.textContent = `${r}권 (${c.areas.join('·')})`;
+}
+
+function requestSwitch(r) {
+  if(r===currentRegion||isLoading) return;
+  if(!confirm(`${REGION[r].emoji} ${r} 네트워크 담당으로 전환하시겠습니까?`)) return;
+  closeSidebar();
+  currentRegion = r;
+  applyTheme(r);
+  startLoading();
+}
+
+/* ════════════════════════════════
+   Query Loading
+════════════════════════════════ */
+function startLoading() {
+  if(isLoading) return;
+  isLoading = true;
+  document.getElementById('updateBtn').disabled = true;
+  showSkeleton();
+  destroyCharts();
+  const overlay = document.getElementById('loadingOverlay');
+  const fill    = document.getElementById('progressFill');
+  const pct     = document.getElementById('progressPct');
+  fill.style.width = '0%'; pct.textContent = '0%';
+  overlay.classList.add('active');
+  let progress = 0;
+  const iv = setInterval(()=>{
+    const step = progress<60?4:progress<85?1.5:5;
+    progress = Math.min(progress+step,100);
+    fill.style.width = progress+'%';
+    pct.textContent  = Math.floor(progress)+'%';
+    if(progress>=100){
+      clearInterval(iv);
+      setTimeout(()=>{
+        overlay.classList.remove('active');
+        renderCurrentSub();
+        isLoading = false;
+        document.getElementById('updateBtn').disabled = false;
+        const now = new Date();
+        const ts  = `${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())} ${p2(now.getHours())}:${p2(now.getMinutes())}`;
+        document.getElementById('headerTime').textContent = `기준일시 : ${ts}`;
+        document.getElementById('dataBadge').textContent  = `● SQL · ${ts.split(' ')[0]} 기준`;
+      },300);
+    }
+  },55);
+}
+const p2 = n=>String(n).padStart(2,'0');
+
+function showSkeleton(){
+  ['kpi-tonghabguk','kpi-gijiguk','kpi-junggye'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = Array(4).fill(0).map(()=>
+      `<div class="kpi-card"><div class="sk sk-t"></div><div class="sk sk-v"></div><div class="sk sk-s"></div></div>`
+    ).join('');
+  });
+}
+function destroyCharts(){
+  Object.values(chartInst).forEach(c=>{try{c.destroy();}catch(e){}});
+  chartInst={};
+}
+
+/* ════════════════════════════════
+   3차 탭 전환
+════════════════════════════════ */
+function switchSub(sub){
+  currentSub = sub;
+  closeSidebar();
+  ['통합국','기지국','중계기'].forEach(s=>{
+    const el = document.getElementById(`sub-${s}`);
+    if(el) el.style.display = s===sub?'block':'none';
+    const btn = document.getElementById(`t3-${s}`);
+    if(btn) btn.classList.toggle('active', s===sub);
+  });
+  destroyCharts();
+  renderCurrentSub();
+}
+
+function renderCurrentSub(){
+  if     (currentSub==='통합국') renderTonghabguk();
+  else if(currentSub==='기지국') renderGijiguk();
+  else if(currentSub==='중계기') renderJunggye();
+}
+
+/* ════════════════════════════════
+   Chart.js 공통 설정
+════════════════════════════════ */
+Chart.defaults.font.family = "'Noto Sans KR','Inter',sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#767676';
+Chart.defaults.animation.duration = 500;
+const TT = {
+  backgroundColor:'#1A1A1A',titleColor:'#fff',bodyColor:'#C4C4C4',
+  borderWidth:1,padding:9,cornerRadius:6,titleFont:{weight:'bold',size:11}
+};
+
+/* ════════════════════════════════
+   KPI 카드 공통 렌더
+════════════════════════════════ */
+function renderKpiCards(id, items){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = items.map(k=>{
+    let yoyHtml = '';
+    if(k.yoy!=null){
+      const dir  = k.yoy>0?'up':k.yoy<0?'down':'flat';
+      const sign = k.yoy>0?'▲':k.yoy<0?'▼':'─';
+      yoyHtml = `<div class="kpi-yoy ${dir}" style="font-size:11px;margin-top:5px;font-weight:600;color:${k.yoy>0?'var(--ok)':k.yoy<0?'var(--danger)':'var(--gray-300)'}">${sign} ${Math.abs(k.yoy).toLocaleString()} 전년 대비</div>`;
+    }
+    return `<div class="kpi-card ${k.cls||''}">
+      <div class="kpi-label">${k.label}</div>
+      <div><span class="kpi-value">${k.val.toLocaleString()}</span><span class="kpi-unit">${k.unit}</span></div>
+      ${yoyHtml}
+      <div class="kpi-src">📂 SQL · 일 단위</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   통합국 렌더링
+════════════════════════════════ */
+function renderTonghabguk(){
+  const d   = REGION[currentRegion].tonghabguk;
+  const cfg = REGION[currentRegion];
+  renderKpiCards('kpi-tonghabguk', d.kpi);
+  renderMapPins(d.pins, cfg.color);
+  renderLeaseBar(d.lease, cfg.color);
+  renderLeaseChart(d.lease, cfg.color);
+  renderGenChart(d.kpi, cfg.color);
+  buildTblColDropdowns(d.table);   // ← 드롭다운 옵션 빌드
+  resetTblFilter();                 // ← 필터 초기화 후 전체 렌더
+}
+
+/* ── 지도 핀 ── */
+function renderMapPins(pins, color){
+  const wrap    = document.getElementById('mapPins');
+  const tooltip = document.getElementById('mapTooltip');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  document.getElementById('mcOp').textContent    = pins.filter(p=>p.type==='op').length;
+  document.getElementById('mcClose').textContent = pins.filter(p=>p.type==='close').length;
+  document.getElementById('mcIssue').textContent = pins.filter(p=>p.type==='issue').length;
+
+  pins.forEach(p=>{
+    const pin = document.createElement('div');
+    pin.className = `map-pin ${p.type}`;
+    pin.style.left = p.x+'%';
+    pin.style.top  = p.y+'%';
+    if(p.type==='op') pin.style.background = color;
+
+    pin.addEventListener('mouseenter', ()=>{
+      tooltip.style.display = 'block';
+      tooltip.innerHTML =
+        `<b>${p.name}</b><br>지역 : ${p.area} &nbsp;|&nbsp; 임차 : ${p.lease}<br>발전기 : ${p.gen==='Y'?'✅ 설치':'❌ 미설치'} &nbsp;|&nbsp; 등급 : ${p.grade}`;
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = ((p.x/100)*wrap.offsetWidth+14)+'px';
+      tooltip.style.top  = ((p.y/100)*wrap.offsetHeight-10)+'px';
+    });
+    pin.addEventListener('mouseleave',()=>{ tooltip.style.display='none'; });
+
+    // 핀 클릭 → 드릴다운
+    pin.addEventListener('click',()=>{
+      const row = REGION[currentRegion].tonghabguk.table.find(r=>r.name===p.name);
+      if(row) openSidebar(row,'통합국');
+    });
+    wrap.appendChild(pin);
+  });
+}
+
+/* ── 임차 형태 바 ── */
+function renderLeaseBar(lease, color){
+  const total  = Object.values(lease).reduce((a,b)=>a+b,0);
+  const colors = [color,'#00A86B','#FF7A00','#C4C4C4'];
+  const bar    = document.getElementById('leaseBar');
+  const legend = document.getElementById('leaseLegend');
+  if(!bar||!legend) return;
+  bar.innerHTML = Object.entries(lease).map(([k,v],i)=>
+    `<div class="lease-seg" style="flex:${v};background:${colors[i]}"></div>`
+  ).join('');
+  legend.innerHTML = Object.entries(lease).map(([k,v],i)=>
+    `<div class="lease-item"><div class="lease-dot" style="background:${colors[i]}"></div>${k} <b style="font-family:var(--font-num)">${v}</b>개 (${Math.round(v/total*100)}%)</div>`
+  ).join('');
+}
+
+/* ── 임차 도넛 ── */
+function renderLeaseChart(lease, color){
+  const ctx = document.getElementById('leaseChart');
+  if(!ctx) return;
+  const colors = [color,'#00A86B','#FF7A00','#C4C4C4'];
+  chartInst.lease = new Chart(ctx,{
+    type:'doughnut',
+    data:{ labels:Object.keys(lease), datasets:[{data:Object.values(lease),backgroundColor:colors,borderWidth:0,hoverOffset:6}] },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{
+        legend:{position:'bottom',labels:{usePointStyle:true,padding:8,font:{size:10}}},
+        tooltip:{...TT,borderColor:color,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}개`}}
+      }
+    }
+  });
+}
+
+/* ── 발전기 도넛 ── */
+function renderGenChart(kpi, color){
+  const ctx = document.getElementById('genChart');
+  if(!ctx) return;
+  const installed   = kpi.find(k=>k.label==='발전기 설치')?.val   || 0;
+  const uninstalled = kpi.find(k=>k.label==='발전기 미설치')?.val || 0;
+  chartInst.gen = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['설치','미설치'],
+      datasets:[{data:[installed,uninstalled],backgroundColor:[color,'#F0F0F0'],borderWidth:0,hoverOffset:6}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{
+        legend:{position:'bottom',labels:{usePointStyle:true,padding:8,font:{size:10}}},
+        tooltip:{...TT,borderColor:color,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}개`}}
+      }
+    }
+  });
+}
+
+/* ── 통합국 테이블 ── */
+/* ════════════════════════════════
+   국사 테이블 필터 상태
+════════════════════════════════ */
+const tblFilter = {
+  keyword : '',
+  status  : new Set(['all']),
+  area    : new Set(),
+  lease   : new Set(),
+  gen     : new Set(),
+  power   : new Set(),
+  grade   : new Set(),
+  battery : new Set(),
+  modern  : new Set(),
+};
+let tblSort = { col:null, dir:'asc' };
+
+const TBL_COL_META = {
+  area    : { label:'지역',     key:'area'    },
+  lease   : { label:'임차형태', key:'lease'   },
+  gen     : { label:'발전기',   key:'gen',    display: v => v==='Y'?'설치':'미설치' },
+  power   : { label:'수전용량', key:'power'   },
+  grade   : { label:'국사등급', key:'grade'   },
+  battery : { label:'축전지',   key:'battery' },
+  modern  : { label:'Moderniza',key:'modern'  },
+};
+
+/* ── 드롭다운 빌드 (데이터 기반) ── */
+function buildTblColDropdowns(data){
+  Object.entries(TBL_COL_META).forEach(([colKey, meta])=>{
+    const values = [...new Set(data.map(r=>r[meta.key]))].sort();
+    const dd     = document.getElementById(`cf-${colKey}`);
+    if(!dd) return;
+    dd.innerHTML = `
+      <div class="col-dd-item select-all" onclick="toggleColAll('${colKey}',this)">
+        <input type="checkbox" id="ca-${colKey}" checked
+               onchange="toggleColAll('${colKey}',this.closest('.col-dd-item'))">
+        <span>전체 선택</span>
+      </div>
+      ${values.map(v=>`
+        <div class="col-dd-item" onclick="toggleColItem('${colKey}','${v}',this)">
+          <input type="checkbox" value="${v}" checked
+                 onchange="toggleColItem('${colKey}','${v}',this.closest('.col-dd-item'))">
+          <span>${meta.display ? meta.display(v) : v}</span>
+        </div>`).join('')}
+      <div class="col-dd-apply">
+        <button class="clear" onclick="clearColFilter('${colKey}')">초기화</button>
+        <button class="apply" onclick="closeAllDropdowns()">적용</button>
+      </div>`;
+  });
+}
+
+/* ── 컬럼 드롭다운 토글 ── */
+function toggleColFilter(colKey, e){
+  e.stopPropagation();
+  const dd     = document.getElementById(`cf-${colKey}`);
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if(!isOpen) dd.classList.add('open');
+}
+function closeAllDropdowns(){
+  document.querySelectorAll('.col-dropdown.open').forEach(d=>d.classList.remove('open'));
+}
+
+/* ── 체크박스 토글 ── */
+function toggleColItem(colKey, val, itemEl){
+  const cb = itemEl.querySelector('input[type=checkbox]');
+  if(event.target !== cb) cb.checked = !cb.checked;
+  const set = tblFilter[colKey];
+  if(cb.checked) set.delete(val); else set.add(val);
+  const allCb = document.getElementById(`ca-${colKey}`);
+  if(allCb) allCb.checked = set.size === 0;
+  updateColFilterBtn(colKey);
+  applyTblFilters();
+}
+function toggleColAll(colKey, itemEl){
+  const cb = itemEl.querySelector('input[type=checkbox]');
+  if(event.target !== cb) cb.checked = !cb.checked;
+  const set    = tblFilter[colKey];
+  const values = [...new Set(REGION[currentRegion].tonghabguk.table.map(r=>r[TBL_COL_META[colKey].key]))];
+  if(cb.checked){
+    set.clear();
+    itemEl.closest('.col-dropdown').querySelectorAll('.col-dd-item:not(.select-all) input').forEach(c=>c.checked=true);
+  } else {
+    values.forEach(v=>set.add(v));
+    itemEl.closest('.col-dropdown').querySelectorAll('.col-dd-item:not(.select-all) input').forEach(c=>c.checked=false);
+  }
+  updateColFilterBtn(colKey);
+  applyTblFilters();
+}
+function clearColFilter(colKey){
+  tblFilter[colKey].clear();
+  document.getElementById(`cf-${colKey}`)?.querySelectorAll('input').forEach(c=>c.checked=true);
+  updateColFilterBtn(colKey);
+  applyTblFilters();
+}
+function updateColFilterBtn(colKey){
+  document.getElementById(`cfBtn-${colKey}`)?.classList.toggle('active', tblFilter[colKey].size>0);
+}
+
+/* ── 상태 태그 ── */
+function toggleStatusTag(el, val){
+  const set = tblFilter.status;
+  if(val==='all'){
+    set.clear(); set.add('all');
+    document.querySelectorAll('[data-status]').forEach(t=>{
+      t.className = 'tag'+(t.dataset.status==='all'?' active-all':'');
+    });
+  } else {
+    set.delete('all');
+    if(set.has(val)){ set.delete(val); el.className='tag'; }
+    else            { set.add(val);    el.className=`tag active-${val}`; }
+    if(set.size===0){
+      set.add('all');
+      document.querySelector('[data-status="all"]').className='tag active-all';
+    } else {
+      document.querySelector('[data-status="all"]').className='tag';
+    }
+  }
+  applyTblFilters();
+}
+
+/* ── 키워드 검색 ── */
+function onTblSearch(val){
+  tblFilter.keyword = val.trim().toLowerCase();
+  document.getElementById('tblSearchClear').classList.toggle('visible', val.length>0);
+  applyTblFilters();
+}
+function clearTblSearch(){
+  document.getElementById('tblSearchInput').value='';
+  onTblSearch('');
+}
+
+/* ── 정렬 ── */
+function sortTbl(col, btn){
+  document.querySelectorAll('.sort-btn').forEach(b=>{ if(b!==btn) b.className='sort-btn'; });
+  tblSort.dir = tblSort.col===col ? (tblSort.dir==='asc'?'desc':'asc') : 'asc';
+  tblSort.col = col;
+  btn.className = `sort-btn ${tblSort.dir}`;
+  applyTblFilters();
+}
+
+/* ── 전체 초기화 ── */
+function resetTblFilter(){
+  tblFilter.keyword = '';
+  tblFilter.status  = new Set(['all']);
+  ['area','lease','gen','power','grade','battery','modern'].forEach(k=>tblFilter[k].clear());
+  const si = document.getElementById('tblSearchInput');
+  if(si) si.value='';
+  document.getElementById('tblSearchClear')?.classList.remove('visible');
+  document.querySelectorAll('[data-status]').forEach(t=>{
+    t.className='tag'+(t.dataset.status==='all'?' active-all':'');
+  });
+  document.querySelectorAll('.col-filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.col-dropdown input[type=checkbox]').forEach(c=>c.checked=true);
+  tblSort = {col:null,dir:'asc'};
+  document.querySelectorAll('.sort-btn').forEach(b=>b.className='sort-btn');
+  applyTblFilters();
+}
+
+/* ── 필터 적용 (핵심) ── */
+function applyTblFilters(){
+  const raw = REGION[currentRegion].tonghabguk.table;
+  let data  = [...raw];
+
+  if(tblFilter.keyword){
+    const kw = tblFilter.keyword;
+    data = data.filter(r=>
+      r.name.toLowerCase().includes(kw) ||
+      r.addr.toLowerCase().includes(kw)
+    );
+  }
+  if(!tblFilter.status.has('all'))
+    data = data.filter(r=> tblFilter.status.has(r.status));
+
+  ['area','lease','power','grade','battery','modern'].forEach(k=>{
+    if(tblFilter[k].size>0) data = data.filter(r=>!tblFilter[k].has(r[k]));
+  });
+  if(tblFilter.gen.size>0)
+    data = data.filter(r=>!tblFilter.gen.has(r.gen));
+
+  if(tblSort.col){
+    data.sort((a,b)=> tblSort.dir==='asc'
+      ? (a[tblSort.col]||'').localeCompare(b[tblSort.col]||'','ko')
+      : (b[tblSort.col]||'').localeCompare(a[tblSort.col]||'','ko')
+    );
+  }
+
+  renderTonghabgukTable(data);
+  renderTblChips();
+
+  const hasFilter = tblFilter.keyword || !tblFilter.status.has('all') ||
+    ['area','lease','gen','power','grade','battery','modern'].some(k=>tblFilter[k].size>0);
+  document.getElementById('tblResetBtn')?.classList.toggle('has-filter', !!hasFilter);
+  document.getElementById('totalCount').textContent    = raw.length;
+  document.getElementById('filteredCount').textContent = data.length;
+}
+
+/* ── 테이블 렌더 ── */
+function renderTonghabgukTable(rows){
+  const tbody = document.getElementById('tonghabgukTable');
+  const empty = document.getElementById('tblEmptyState');
+  const kw    = tblFilter.keyword;
+  const hl    = text => {
+    if(!kw) return text;
+    return text.replace(new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+      '<span class="hl">$1</span>');
+  };
+  if(!rows||rows.length===0){
+    tbody.innerHTML='';
+    if(empty) empty.style.display='block';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  tbody.innerHTML = rows.map((r,i)=>`
+    <tr onclick="openSidebar(${JSON.stringify(r).replace(/"/g,'&quot;')},'통합국')" id="tr-t-${i}">
+      <td><b>${hl(r.name)}</b></td>
+      <td>${r.area}</td>
+      <td>${r.lease}</td>
+      <td>${r.gen==='Y'
+        ?'<span style="color:var(--ok);font-weight:700">✅ 설치</span>'
+        :'<span style="color:var(--danger);font-weight:700">❌ 미설치</span>'}</td>
+      <td>${r.power}</td>
+      <td><span class="badge ${r.grade==='A'||r.grade==='B'?'ok':r.grade==='C'?'warn':'danger'}">${r.grade}등급</span></td>
+      <td><span class="badge ${r.battery==='정상'?'ok':'danger'}">${r.battery}</span></td>
+      <td>${r.modern}</td>
+      <td><span class="badge ${r.status}">${r.statusTxt}</span></td>
+      <td style="color:var(--region-primary);font-size:11px;font-weight:700">상세 ↗</td>
+    </tr>`).join('');
+}
+
+/* ── 필터 칩 렌더 ── */
+function renderTblChips(){
+  const row   = document.getElementById('tblChipRow');
+  if(!row) return;
+  const chips = [];
+
+  if(tblFilter.keyword)
+    chips.push({label:`검색: "${tblFilter.keyword}"`, fn:'clearTblSearch()'});
+
+  if(!tblFilter.status.has('all')){
+    const map={ok:'정상',warn:'점검필요',danger:'긴급'};
+    [...tblFilter.status].forEach(s=>{
+      chips.push({label:`상태: ${map[s]}`,
+        fn:`(function(){tblFilter.status.delete('${s}');if(tblFilter.status.size===0)tblFilter.status.add('all');document.querySelector('[data-status="${s}"]').className='tag';if(tblFilter.status.has('all'))document.querySelector('[data-status="all"]').className='tag active-all';applyTblFilters();})()`
+      });
+    });
+  }
+
+  const colLabels={area:'지역',lease:'임차',gen:'발전기',power:'수전용량',grade:'등급',battery:'축전지',modern:'Moderniza'};
+  Object.entries(colLabels).forEach(([k,label])=>{
+    [...tblFilter[k]].forEach(v=>{
+      const dv = k==='gen'?(v==='Y'?'설치':'미설치'):v;
+      chips.push({label:`${label}: ${dv} 제외`,
+        fn:`(function(){tblFilter['${k}'].delete('${v}');document.querySelectorAll('#cf-${k} input[value="${v}"]').forEach(c=>c.checked=true);updateColFilterBtn('${k}');applyTblFilters();})()`
+      });
+    });
+  });
+
+  row.innerHTML = chips.length===0 ? '' :
+    chips.map(c=>`
+      <div class="filter-chip">${c.label}
+        <span class="chip-x" onclick="${c.fn}">✕</span>
+      </div>`).join('')
+    + `<span class="chip-clear-all" onclick="resetTblFilter()">전체 초기화</span>`;
+}
+
+
+/* ════════════════════════════════
+   기지국 렌더링
+════════════════════════════════ */
+function renderGijiguk(){
+  const d   = REGION[currentRegion].gijiguk;
+  renderKpiCards('kpi-gijiguk', d.kpi);
+  document.getElementById('gijigukTable').innerHTML = d.table.map((r,i)=>{
+    const yoyCls = r.yoy.startsWith('+')?'style="color:var(--ok);font-weight:700"':r.yoy.startsWith('-')?'style="color:var(--danger);font-weight:700"':'';
+    return `<tr onclick="openSidebar(REGION[currentRegion].gijiguk.table[${i}],'기지국')" id="tr-g-${i}">
+      <td><b>${r.name}</b></td>
+      <td>${r.area}</td>
+      <td><span class="badge ${r.gen==='5G'?'g5':r.gen==='LTE'?'lte':'g3'}">${r.gen}</span></td>
+      <td style="font-family:var(--font-num)">${r.equip}</td>
+      <td ${yoyCls} style="font-family:var(--font-num);font-weight:700">${r.yoy}</td>
+      <td>${r.date}</td>
+      <td><span class="badge ${r.status}">${r.statusTxt}</span></td>
+      <td style="color:var(--region-primary);font-size:11px;font-weight:700">상세 ↗</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   중계기 렌더링
+════════════════════════════════ */
+function renderJunggye(){
+  const d = REGION[currentRegion].junggye;
+  renderKpiCards('kpi-junggye', d.kpi);
+  document.getElementById('junggyeTable').innerHTML = d.table.map((r,i)=>{
+    const yoyCls = r.yoy.startsWith('+')?'style="color:var(--ok);font-weight:700"':r.yoy.startsWith('-')?'style="color:var(--danger);font-weight:700"':'';
+    return `<tr onclick="openSidebar(REGION[currentRegion].junggye.table[${i}],'중계기')" id="tr-r-${i}">
+      <td><b>${r.name}</b></td>
+      <td>${r.area}</td>
+      <td><span class="badge ${r.gen==='5G'?'g5':r.gen==='LTE'?'lte':'g3'}">${r.gen}</span></td>
+      <td style="font-family:var(--font-num)">${r.equip}</td>
+      <td ${yoyCls} style="font-family:var(--font-num);font-weight:700">${r.yoy}</td>
+      <td>${r.date}</td>
+      <td><span class="badge ${r.status}">${r.statusTxt}</span></td>
+      <td style="color:var(--region-primary);font-size:11px;font-weight:700">상세 ↗</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   드릴다운 사이드바 열기/닫기
+════════════════════════════════ */
+function openSidebar(data, type){
+  currentDrillData = data;
+  currentDrillType = type;
+  currentSbTab     = '기본정보';
+
+  // 헤더 설정
+  document.getElementById('sbTitle').textContent    = data.name || data.name;
+  document.getElementById('sbSubtitle').textContent = `${type} · ${data.area || ''} 세부 정보`;
+
+  const statusMap = {ok:'정상',warn:'점검 필요',danger:'긴급',g5:'5G',lte:'LTE',g3:'3G'};
+  const badgeEl   = document.getElementById('sbBadge');
+  badgeEl.textContent = statusMap[data.status] || data.statusTxt || '정상';
+  badgeEl.style.background =
+    data.status==='ok'?'var(--ok)':
+    data.status==='warn'?'var(--warn)':
+    data.status==='danger'?'var(--danger)':'var(--region-primary)';
+
+  // 탭 초기화
+  document.querySelectorAll('.sb-tab').forEach((t,i)=>{
+    t.classList.toggle('active', i===0);
+  });
+
+  // 본문 렌더
+  renderSbContent('기본정보', data, type);
+
+  // 오픈 애니메이션
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+
+  // 선택 행 하이라이트
+  highlightSelectedRow(data.name, type);
+}
+
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+  // 하이라이트 해제
+  document.querySelectorAll('.main-table tr.selected').forEach(tr=>tr.classList.remove('selected'));
+  // 사이드바 내 차트 파괴
+  if(chartInst.sbChart){ try{chartInst.sbChart.destroy();}catch(e){} delete chartInst.sbChart; }
+}
+
+function highlightSelectedRow(name, type){
+  const tbodyMap = {통합국:'tonghabgukTable',기지국:'gijigukTable',중계기:'junggyeTable'};
+  const tbody = document.getElementById(tbodyMap[type]);
+  if(!tbody) return;
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    tr.classList.toggle('selected', tr.cells[0]?.textContent.trim()===name);
+  });
+}
+
+/* ════════════════════════════════
+   사이드바 탭 전환
+════════════════════════════════ */
+function switchSbTab(tab, el){
+  currentSbTab = tab;
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(chartInst.sbChart){ try{chartInst.sbChart.destroy();}catch(e){} delete chartInst.sbChart; }
+  renderSbContent(tab, currentDrillData, currentDrillType);
+}
+
+/* ════════════════════════════════
+   사이드바 본문 렌더링
+════════════════════════════════ */
+function renderSbContent(tab, data, type){
+  const body = document.getElementById('sbBody');
+  if(!data) return;
+
+  if(tab==='기본정보')  body.innerHTML = renderSbBasic(data, type);
+  if(tab==='설비현황')  body.innerHTML = renderSbEquip(data, type);
+  if(tab==='이력')      body.innerHTML = renderSbHistory(data, type);
+  if(tab==='Moderniza') body.innerHTML = renderSbModern(data, type);
+
+  // 설비현황 탭 차트 렌더
+  if(tab==='설비현황'){
+    const ctx = document.getElementById('sbEquipChart');
+    if(ctx){
+      const cfg = REGION[currentRegion];
+      chartInst.sbChart = new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:['1월','2월','3월','4월','5월'],
+          datasets:[{
+            label: type==='통합국'?'장비 가동률 (%)':'장비 수 (대)',
+            data: type==='통합국'?[98.2,97.8,98.5,97.1,98.9]:[4,5,5,6,data.equip||6],
+            backgroundColor: cfg.color+'CC',
+            borderRadius:5,borderSkipped:false,
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{...TT,borderColor:cfg.color}},
+          scales:{
+            y:{grid:{color:'#F0F0F0'},ticks:{font:{family:'Inter'}}},
+            x:{grid:{display:false}}
+          }
+        }
+      });
+    }
+  }
+}
+
+/* ── 기본 정보 탭 ── */
+function renderSbBasic(data, type){
+  const cfg = REGION[currentRegion];
+
+  if(type==='통합국'){
+    return `
+    <div class="sb-section">
+      <div class="sb-section-title">위치 정보</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">국사명</div><div class="info-value highlight" style="font-size:13px">${data.name}</div></div>
+        <div class="info-item"><div class="info-label">지역</div><div class="info-value">${data.area}</div></div>
+      </div>
+      <div style="background:var(--gray-50);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="font-size:10px;color:var(--gray-500);font-weight:600;margin-bottom:4px;">주소</div>
+        <div style="font-size:12px;color:var(--gray-700)">${data.addr}</div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-title">임차 / 등급 정보</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">임차 형태</div><div class="info-value">${data.lease}</div></div>
+        <div class="info-item"><div class="info-label">국사 등급</div>
+          <div class="info-value ${data.grade==='A'||data.grade==='B'?'ok':data.grade==='C'?'warn':'danger'}">${data.grade}등급</div>
+        </div>
+        <div class="info-item"><div class="info-label">수전 용량</div><div class="info-value" style="font-size:13px">${data.power}</div></div>
+        <div class="info-item"><div class="info-label">운영 상태</div>
+          <div class="info-value ${data.status}"><span class="badge ${data.status}">${data.statusTxt}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-title">설비 요약</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">고정형 발전기</div>
+          <div class="info-value ${data.gen==='Y'?'ok':'danger'}">${data.gen==='Y'?'✅ 설치':'❌ 미설치'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">축전지 상태</div>
+          <div class="info-value ${data.battery==='정상'?'ok':'danger'}">${data.battery}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Modernization</div>
+          <div class="info-value">${data.modern}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">데이터 소스</div>
+          <div class="info-value" style="font-size:12px">📂 SQL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-title">현재 알림</div>
+      ${data.status==='danger'?`
+        <div style="background:#FFF0F1;border:1px solid #FFCCD0;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:flex-start;">
+          <div style="font-size:18px;flex-shrink:0">🚨</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:4px">긴급 처리 필요</div>
+            <div style="font-size:11px;color:var(--gray-700);line-height:1.6">발전기 미설치 및 축전지 불량 상태입니다.<br>즉시 점검 및 조치가 필요합니다.</div>
+          </div>
+        </div>`:
+      data.status==='warn'?`
+        <div style="background:#FFF3E0;border:1px solid #FFD9B3;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:flex-start;">
+          <div style="font-size:18px;flex-shrink:0">⚠️</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:4px">점검 필요</div>
+            <div style="font-size:11px;color:var(--gray-700);line-height:1.6">발전기 미설치 상태입니다.<br>축전지 교체 주기를 확인하세요.</div>
+          </div>
+        </div>`:`
+        <div style="background:#E6F7F1;border:1px solid #B3EDD8;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:flex-start;">
+          <div style="font-size:18px;flex-shrink:0">✅</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--ok);margin-bottom:4px">정상 운영 중</div>
+            <div style="font-size:11px;color:var(--gray-700);line-height:1.6">현재 모든 설비가 정상 운영 중입니다.</div>
+          </div>
+        </div>`}
+    </div>`;
+  }
+
+  // 기지국 / 중계기 공통
+  return `
+    <div class="sb-section">
+      <div class="sb-section-title">Site 기본 정보</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Site명</div><div class="info-value highlight" style="font-size:13px">${data.name}</div></div>
+        <div class="info-item"><div class="info-label">지역</div><div class="info-value">${data.area}</div></div>
+        <div class="info-item"><div class="info-label">세대</div>
+          <div class="info-value"><span class="badge ${data.gen==='5G'?'g5':data.gen==='LTE'?'lte':'g3'}">${data.gen}</span></div>
+        </div>
+        <div class="info-item"><div class="info-label">운영 상태</div>
+          <div class="info-value"><span class="badge ${data.status}">${data.statusTxt}</span></div>
+        </div>
+        <div class="info-item"><div class="info-label">장비 수</div><div class="info-value highlight">${data.equip}<span style="font-size:12px;color:var(--gray-500);margin-left:2px">대</span></div></div>
+        <div class="info-item"><div class="info-label">전년 대비</div>
+          <div class="info-value ${data.yoy&&data.yoy.startsWith('+')?'ok':data.yoy&&data.yoy.startsWith('-')?'danger':''}">
+            ${data.yoy&&data.yoy.startsWith('+')?'▲':data.yoy&&data.yoy.startsWith('-')?'▼':'─'} ${data.yoy||'0'}
+          </div>
+        </div>
+        <div class="info-item"><div class="info-label">최종 점검일</div><div class="info-value" style="font-size:12px">${data.date}</div></div>
+        <div class="info-item"><div class="info-label">데이터 소스</div><div class="info-value" style="font-size:12px">📂 SQL</div></div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-title">현재 알림</div>
+      ${data.status==='warn'?`
+        <div style="background:#FFF3E0;border:1px solid #FFD9B3;border-radius:8px;padding:12px;display:flex;gap:10px;">
+          <div style="font-size:18px">⚠️</div>
+          <div><div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:4px">점검 필요</div>
+          <div style="font-size:11px;color:var(--gray-700);line-height:1.6">해당 Site의 장비 점검이 필요합니다.</div></div>
+        </div>`:`
+        <div style="background:#E6F7F1;border:1px solid #B3EDD8;border-radius:8px;padding:12px;display:flex;gap:10px;">
+          <div style="font-size:18px">✅</div>
+          <div><div style="font-size:12px;font-weight:700;color:var(--ok);margin-bottom:4px">정상 운영 중</div>
+          <div style="font-size:11px;color:var(--gray-700);line-height:1.6">현재 정상 운영 중입니다.</div></div>
+        </div>`}
+    </div>`;
+}
+
+/* ── 설비 현황 탭 ── */
+function renderSbEquip(data, type){
+  return `
+    <div class="sb-section">
+      <div class="sb-section-title">${type==='통합국'?'장비 가동률 추이 (%)':'장비 수 추이 (대)'}</div>
+      <div class="sb-chart-wrap"><canvas id="sbEquipChart"></canvas></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-title">설비 목록</div>
+      <table class="sb-table">
+        <thead><tr><th>설비명</th><th>규격</th><th>설치일</th><th>상태</th></tr></thead>
+        <tbody>
+          ${type==='통합국'?`
+          <tr><td>주배전반</td><td>3Φ 380V</td><td>2018-03-15</td><td><span class="badge ok">정상</span></td></tr>
+          <tr><td>UPS</td><td>30KVA</td><td>2019-06-20</td><td><span class="badge ok">정상</span></td></tr>
+          <tr><td>축전지</td><td>200Ah×24</td><td>2021-09-10</td><td><span class="badge ${data.battery==='정상'?'ok':'danger'}">${data.battery}</span></td></tr>
+          <tr><td>항온항습기</td><td>10RT</td><td>2020-01-05</td><td><span class="badge ok">정상</span></td></tr>
+          <tr><td>발전기</td><td>500KVA</td><td>${data.gen==='Y'?'2017-11-30':'미설치'}</td><td><span class="badge ${data.gen==='Y'?'ok':'danger'}">${data.gen==='Y'?'정상':'미설치'}</span></td></tr>`:`
+          <tr><td>기지국 장비</td><td>${data.gen} RU</td><td>2023-04-10</td><td><span class="badge ${data.status}">${data.statusTxt}</span></td></tr>
+          <tr><td>안테나</td><td>64T64R</td><td>2023-04-10</td><td><span class="badge ok">정상</span></td></tr>
+          <tr><td>전원장치</td><td>48V DC</td><td>2023-04-10</td><td><span class="badge ok">정상</span></td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ── 점검 이력 탭 ── */
+function renderSbHistory(data, type){
+  const histories = [
+    {date:'2026-04-28',text:'정기 점검 완료 — 이상 없음',author:'김담당',color:'var(--ok)'},
+    {date:'2026-03-15',text:'축전지 상태 점검 — 정상 확인',author:'이담당',color:'var(--ok)'},
+    {date:'2026-02-10',text:'발전기 시운전 점검 완료',author:'박담당',color:'var(--ok)'},
+    {date:'2026-01-05',text:'연간 정기 점검 실시',author:'김담당',color:'var(--region-primary)'},
+    {date:'2025-11-20',text:'항온항습기 필터 교체',author:'이담당',color:'var(--warn)'},
+    {date:'2025-09-08',text:'UPS 배터리 교체 완료',author:'박담당',color:'var(--warn)'},
+  ];
+  return `
+    <div class="sb-section">
+      <div class="sb-section-title">점검 이력 (최근 6건)</div>
+      <div class="timeline">
+        ${histories.map((h,i)=>`
+          <div class="tl-item">
+            <div class="tl-dot-wrap">
+              <div class="tl-dot" style="background:${h.color}"></div>
+              ${i<histories.length-1?'<div class="tl-line"></div>':''}
+            </div>
+            <div class="tl-content">
+              <div class="tl-date">${h.date}</div>
+              <div class="tl-text">${h.text}</div>
+              <div class="tl-author">담당자 : ${h.author}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-title">점검 통계</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">연간 점검 횟수</div><div class="info-value highlight">12<span style="font-size:12px;color:var(--gray-500);margin-left:2px">회</span></div></div>
+        <div class="info-item"><div class="info-label">최근 점검일</div><div class="info-value" style="font-size:12px">2026-04-28</div></div>
+        <div class="info-item"><div class="info-label">이슈 발생 횟수</div><div class="info-value ${data.status==='danger'?'danger':'ok'}">${data.status==='danger'?3:data.status==='warn'?1:0}<span style="font-size:12px;color:var(--gray-500);margin-left:2px">건</span></div></div>
+        <div class="info-item"><div class="info-label">평균 처리 시간</div><div class="info-value">2.4<span style="font-size:12px;color:var(--gray-500);margin-left:2px">시간</span></div></div>
+      </div>
+    </div>`;
+}
+
+/* ── Modernization 탭 ── */
+function renderSbModern(data, type){
+  const statusColor = data.modern==='완료'?'var(--ok)':data.modern==='진행중'?'var(--region-primary)':data.modern==='예정'?'var(--warn)':'var(--gray-300)';
+  const pct         = data.modern==='완료'?100:data.modern==='진행중'?55:data.modern==='예정'?10:0;
+  return `
+    <div class="sb-section">
+      <div class="sb-section-title">Modernization 현황</div>
+      <div style="background:var(--gray-50);border-radius:10px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;font-weight:700;color:var(--gray-900)">${data.name}</span>
+          <span style="font-size:12px;font-weight:700;color:${statusColor}">${data.modern}</span>
+        </div>
+        <div style="height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${pct}%;background:${statusColor};border-radius:4px;transition:width .8s ease"></div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);text-align:right">${pct}% 완료</div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-title">단계별 진행 현황</div>
+      <table class="sb-table">
+        <thead><tr><th>단계</th><th>항목</th><th>예정일</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>1단계</td><td>사전 조사</td><td>2025-06-01</td><td><span class="badge ok">완료</span></td></tr>
+          <tr><td>2단계</td><td>설계 확정</td><td>2025-09-01</td><td><span class="badge ok">완료</span></td></tr>
+          <tr><td>3단계</td><td>장비 발주</td><td>2026-01-01</td><td><span class="badge ${data.modern==='완료'||data.modern==='진행중'?'ok':'warn'}">${data.modern==='완료'||data.modern==='진행중'?'완료':'예정'}</span></td></tr>
+          <tr><td>4단계</td><td>설치 공사</td><td>2026-04-01</td><td><span class="badge ${data.modern==='완료'?'ok':data.modern==='진행중'?'blue':'warn'}">${data.modern==='완료'?'완료':data.modern==='진행중'?'진행중':'예정'}</span></td></tr>
+          <tr><td>5단계</td><td>검수 완료</td><td>2026-06-30</td><td><span class="badge ${data.modern==='완료'?'ok':'warn'}">${data.modern==='완료'?'완료':'예정'}</span></td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ════════════════════════════════
+   초기 진입
+════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  currentRegion = '중부';
+  applyTheme(currentRegion);
+  document.addEventListener('click', closeAllDropdowns); // ← 추가
+  startLoading();
+});
+</script>
+</body>
+</html>
+
