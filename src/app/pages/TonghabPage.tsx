@@ -81,9 +81,9 @@ export function TonghabPage({ region }: TonghabPageProps) {
   };
 
   return (
-    <div className="h-full flex flex-col gap-3.5 overflow-hidden">
+    <div className="flex flex-col gap-3.5">
       {/* KPI 카드 */}
-      <div className="grid grid-cols-4 gap-2.5 flex-shrink-0">
+      <div className="grid grid-cols-4 gap-2.5">
         <KpiCard
           label="운용중 / 폐국 진행중"
           value={`${kpiData.operating} / ${kpiData.closing}`}
@@ -115,7 +115,7 @@ export function TonghabPage({ region }: TonghabPageProps) {
       </div>
 
       {/* 지도 + 차트 영역 */}
-      <div className="grid grid-cols-12 gap-2.5 flex-shrink-0">
+      <div className="grid grid-cols-12 gap-2.5">
         {/* 지도 - 6fr */}
         <div className="col-span-6">
           <MapPlaceholder
@@ -167,8 +167,8 @@ export function TonghabPage({ region }: TonghabPageProps) {
       </div>
 
       {/* 국사 세부 현황 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 flex-shrink-0">
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
           <div
             className="w-0.5 h-4 rounded"
             style={{ backgroundColor: "var(--region-primary)" }}
@@ -178,7 +178,7 @@ export function TonghabPage({ region }: TonghabPageProps) {
             주소, Moderniza 현황 등
           </span>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div>
           <TonghabTable data={filteredData} onStationClick={handleStationClick} />
         </div>
       </div>

@@ -239,7 +239,7 @@ export function TonghabTable({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm h-full flex flex-col">
+    <div className="bg-white rounded-lg shadow-sm flex flex-col">
       {/* 필터 영역 */}
       <div className="px-5 pt-3 pb-1.5 flex-shrink-0">
         {/* 키워드 검색 & 상태 필터 */}
@@ -405,7 +405,7 @@ export function TonghabTable({
       )}
 
       {/* 테이블 */}
-      <div className="flex-1 px-5 pt-1.5 pb-5 overflow-auto">
+      <div className="px-5 pt-1.5 pb-5 overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead
             className="sticky top-0 z-10"

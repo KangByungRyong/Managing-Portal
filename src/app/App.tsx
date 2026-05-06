@@ -85,7 +85,11 @@ export default function App() {
 
     // 홈 페이지
     if (level1 === "home") {
-      return <BlankPage title="준비 중인 페이지입니다" />;
+      return (
+        <div className="flex-1 overflow-y-auto">
+          <BlankPage title="준비 중인 페이지입니다" />
+        </div>
+      );
     }
 
     // 현황 > 시설 현황
@@ -103,10 +107,10 @@ export default function App() {
         : [];
 
       return (
-        <>
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* 3차 탭 버튼 */}
           {level3Tabs.length > 0 && (
-            <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center justify-between mb-3.5 flex-shrink-0">
               <Level3Tabs
                 tabs={level3Tabs}
                 activeTab={level3 || "tonghab"}
@@ -120,100 +124,124 @@ export default function App() {
             </div>
           )}
 
-          {/* 콘텐츠 */}
+          {/* 통합국 현황 — 페이지 수직 스크롤 */}
           {level3 === "tonghab" && (
-            <TonghabPage region={region} />
+            <div className="flex-1 overflow-y-auto">
+              <TonghabPage region={region} />
+            </div>
           )}
-          {level3 === "giji" && <GijigukPage region={region} />}
+
+          {/* 기지국 현황 — 페이지 수직 스크롤 */}
+          {level3 === "giji" && (
+            <div className="flex-1 overflow-y-auto">
+              <GijigukPage region={region} />
+            </div>
+          )}
 
           {level3 === "junggye" && (
-            <div className="space-y-3.5">
-              <div className="grid grid-cols-4 gap-2.5">
-                <KpiCard
-                  label="중계기 Site 수"
-                  value={632}
-                  unit="개"
-                  yoy={2.8}
-                />
-                <KpiCard
-                  label="5G 장비 수"
-                  value={845}
-                  unit="개"
-                  yoy={15.6}
-                />
-                <KpiCard
-                  label="LTE 장비 수"
-                  value={723}
-                  unit="개"
-                  yoy={-3.2}
-                />
-                <KpiCard
-                  label="3G 장비 수"
-                  value={156}
-                  unit="개"
-                  yoy={-38.4}
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-3.5">
+                <div className="grid grid-cols-4 gap-2.5">
+                  <KpiCard
+                    label="중계기 Site 수"
+                    value={632}
+                    unit="개"
+                    yoy={2.8}
+                  />
+                  <KpiCard
+                    label="5G 장비 수"
+                    value={845}
+                    unit="개"
+                    yoy={15.6}
+                  />
+                  <KpiCard
+                    label="LTE 장비 수"
+                    value={723}
+                    unit="개"
+                    yoy={-3.2}
+                  />
+                  <KpiCard
+                    label="3G 장비 수"
+                    value={156}
+                    unit="개"
+                    yoy={-38.4}
+                  />
+                </div>
+                <BlankPage
+                  title="중계기 상세 콘텐츠"
+                  plannedFeatures={[
+                    "세대별(5G/LTE/3G) Site 수 및 전년 대비 증감",
+                    "세대별 장비 수 및 전년 대비 증감",
+                    "중계기 세부 현황 테이블 (TBD)",
+                  ]}
                 />
               </div>
+            </div>
+          )}
+          {level3 === "lora" && (
+            <div className="flex-1 overflow-y-auto">
               <BlankPage
-                title="중계기 상세 콘텐츠"
+                title="LoRa / WiFi / Femto 현황"
+                description="추후 구성 예정"
                 plannedFeatures={[
-                  "세대별(5G/LTE/3G) Site 수 및 전년 대비 증감",
-                  "세대별 장비 수 및 전년 대비 증감",
-                  "중계기 세부 현황 테이블 (TBD)",
+                  "LoRa 현황 (항목 미정)",
+                  "WiFi 현황 (항목 미정)",
+                  "Femto 현황 (항목 미정)",
                 ]}
               />
             </div>
           )}
-          {level3 === "lora" && (
-            <BlankPage
-              title="LoRa / WiFi / Femto 현황"
-              description="추후 구성 예정"
-              plannedFeatures={[
-                "LoRa 현황 (항목 미정)",
-                "WiFi 현황 (항목 미정)",
-                "Femto 현황 (항목 미정)",
-              ]}
-            />
-          )}
           {!["tonghab", "giji", "junggye", "lora"].includes(
             level3 || "",
-          ) && <BlankPage title="준비 중인 페이지입니다" />}
-        </>
+          ) && (
+            <div className="flex-1 overflow-y-auto">
+              <BlankPage title="준비 중인 페이지입니다" />
+            </div>
+          )}
+        </div>
       );
     }
 
     // 현황 > 재고 현황
     if (level1 === "status" && level2 === "inventory") {
       return (
-        <BlankPage
-          title="재고 현황"
-          description="추후 구성 예정"
-          plannedFeatures={[
-            "재고 관리 현황",
-            "입출고 현황",
-            "재고 분석 지표",
-          ]}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <BlankPage
+            title="재고 현황"
+            description="추후 구성 예정"
+            plannedFeatures={[
+              "재고 관리 현황",
+              "입출고 현황",
+              "재고 분석 지표",
+            ]}
+          />
+        </div>
       );
     }
 
     // 현황 > 특화 지표
     if (level1 === "status" && level2 === "specialized") {
       return (
-        <BlankPage
-          title="특화 지표"
-          description="추후 구성 예정"
-          plannedFeatures={[
-            "특화 항목 1 (TBD)",
-            "특화 항목 2 (TBD)",
-            "특화 항목 3 (TBD)",
-          ]}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <BlankPage
+            title="특화 지표"
+            description="추후 구성 예정"
+            plannedFeatures={[
+              "특화 항목 1 (TBD)",
+              "특화 항목 2 (TBD)",
+              "특화 항목 3 (TBD)",
+            ]}
+          />
+        </div>
       );
     }
 
     // 기타 모든 페이지는 빈 페이지로
-    return <BlankPage title="준비 중인 페이지입니다" />;
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <BlankPage title="준비 중인 페이지입니다" />
+      </div>
+    );
   };
 
   return (
@@ -231,7 +259,7 @@ export default function App() {
         onNavExpand={setIsNavExpanded}
       />
       <main
-        className="p-4 overflow-hidden transition-all duration-300"
+        className="p-4 overflow-hidden flex flex-col transition-all duration-300"
         style={{
           marginTop: isNavExpanded ? "140px" : "100px",
           height: isNavExpanded
