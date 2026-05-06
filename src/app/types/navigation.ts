@@ -83,7 +83,7 @@ export const navigationConfig = {
         label: "안전",
         icon: "🦺",
         tabs: {
-          work: { label: "작업", status: "blank" },
+          work: { label: "작업", status: "complete" },
           nsr: { label: "NSR", status: "blank" },
         },
       },
@@ -130,8 +130,7 @@ export const navigationConfig = {
     children: {
       capex: { label: "CapEx", status: "blank" },
       opex: { label: "OpEx", status: "blank" },
-      quality: { label: "품질 (CQ)", status: "blank" },
-      inventory: { label: "재고", status: "blank" },
+      quality: { label: "품질 (CQ)", status: "blank" },      
       security: { label: "보안", status: "blank" },
       autonomous: {
         label: "Autonomous Network",
