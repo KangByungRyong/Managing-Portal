@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { loadKakaoMapsSdk } from "../lib/loadKakaoMapsSdk";
 
 export interface ChartData {
   name: string;
@@ -68,20 +69,131 @@ interface MapPlaceholderProps {
 }
 
 export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) {
-  // 지도 영역 내 상대 좌표로 변환 (실제로는 위경도 -> 픽셀 변환)
-  const getMapPosition = (lat?: number, lng?: number) => {
-    if (!lat || !lng) return null;
-    // 중부권 대략적 범위: 위도 36-37.5, 경도 126.5-127.5
-    const x = ((lng - 126.5) / 1.0) * 100;
-    const y = (1 - (lat - 36.0) / 1.5) * 100;
-    return { x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) };
-  };
+  const [sdkStatus, setSdkStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [sdkMessage, setSdkMessage] = useState("Kakao SDK 준비 전");
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const kakaoAppKey = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 
-  const statusCounts = {
-    정상: stations.filter((s) => s.status === "정상").length,
-    점검필요: stations.filter((s) => s.status === "점검필요").length,
-    긴급: stations.filter((s) => s.status === "긴급").length,
-  };
+  const positionedStations = useMemo(
+    () => stations.filter((station) => typeof station.lat === "number" && typeof station.lng === "number"),
+    [stations]
+  );
+
+  const mapCenter = useMemo(() => {
+    if (positionedStations.length === 0) {
+      return { lat: 36.35, lng: 127.38, level: 12 };
+    }
+
+    const sum = positionedStations.reduce(
+      (acc, station) => ({
+        lat: acc.lat + (station.lat ?? 0),
+        lng: acc.lng + (station.lng ?? 0),
+      }),
+      { lat: 0, lng: 0 }
+    );
+
+    const lat = sum.lat / positionedStations.length;
+    const lng = sum.lng / positionedStations.length;
+    const latSpread = Math.max(...positionedStations.map((station) => station.lat ?? lat)) - Math.min(...positionedStations.map((station) => station.lat ?? lat));
+    const lngSpread = Math.max(...positionedStations.map((station) => station.lng ?? lng)) - Math.min(...positionedStations.map((station) => station.lng ?? lng));
+    const maxSpread = Math.max(latSpread, lngSpread);
+
+    let level = 12;
+    if (maxSpread > 2.2) level = 13;
+    else if (maxSpread > 1.2) level = 12;
+    else if (maxSpread > 0.6) level = 11;
+    else level = 10;
+
+    return { lat, lng, level };
+  }, [positionedStations]);
+
+  useEffect(() => {
+    if (!kakaoAppKey) {
+      setSdkStatus("error");
+      setSdkMessage("VITE_KAKAO_MAP_APP_KEY 미설정");
+      return;
+    }
+
+    let isMounted = true;
+    setSdkStatus("loading");
+    setSdkMessage("Kakao SDK 로딩 중");
+
+    loadKakaoMapsSdk(kakaoAppKey)
+      .then(() => {
+        if (!isMounted) return;
+        setSdkStatus("ready");
+        setSdkMessage("Kakao SDK 준비 완료");
+      })
+      .catch((error: Error) => {
+        if (!isMounted) return;
+        setSdkStatus("error");
+        setSdkMessage(error.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [kakaoAppKey]);
+
+  useEffect(() => {
+    if (sdkStatus !== "ready" || !mapContainerRef.current || !window.kakao?.maps) {
+      return;
+    }
+
+    const map = new window.kakao.maps.Map(mapContainerRef.current, {
+      center: new window.kakao.maps.LatLng(mapCenter.lat, mapCenter.lng),
+      level: mapCenter.level,
+    });
+
+    const statusColorMap = {
+      정상: "#2563EB",
+      점검필요: "#F59E0B",
+      긴급: "#DC2626",
+    } as const;
+
+    const overlays = positionedStations.map((station) => {
+      const color = statusColorMap[station.status];
+      const content = `
+        <div title="${station.name} (${station.status})" style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-4px);cursor:pointer;">
+          <div style="padding:3px 7px;border-radius:999px;background:rgba(15,23,42,0.88);color:white;font-size:10px;font-weight:700;line-height:1;white-space:nowrap;box-shadow:0 8px 18px rgba(15,23,42,0.18);">
+            ${station.name}
+          </div>
+          <div style="width:14px;height:14px;border-radius:999px;background:${color};border:3px solid rgba(255,255,255,0.98);box-shadow:0 8px 20px rgba(15,23,42,0.16);"></div>
+        </div>
+      `;
+
+      const overlay = new window.kakao.maps.CustomOverlay({
+        position: new window.kakao.maps.LatLng(station.lat ?? mapCenter.lat, station.lng ?? mapCenter.lng),
+        content,
+        xAnchor: 0.5,
+        yAnchor: 1,
+      });
+
+      overlay.setMap(map);
+      return overlay;
+    });
+
+    return () => {
+      overlays.forEach((overlay) => overlay.setMap(null));
+    };
+  }, [mapCenter, positionedStations, sdkStatus]);
+
+  const statusCounts = useMemo(
+    () => ({
+      정상: stations.filter((s) => s.status === "정상").length,
+      점검필요: stations.filter((s) => s.status === "점검필요").length,
+      긴급: stations.filter((s) => s.status === "긴급").length,
+    }),
+    [stations]
+  );
+  const sdkToneClass =
+    sdkStatus === "ready"
+      ? "text-emerald-600 bg-emerald-50 border-emerald-100"
+      : sdkStatus === "loading"
+        ? "text-amber-600 bg-amber-50 border-amber-100"
+        : sdkStatus === "error"
+          ? "text-rose-600 bg-rose-50 border-rose-100"
+          : "text-gray-400 bg-gray-50 border-gray-100";
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-3.5 h-full">
@@ -93,58 +205,27 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
           />
           통합국 위치 현황
         </div>
-        <span className="text-[10px] text-gray-300">🗺️ 핀 클릭 → 세부 정보</span>
+        <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${sdkToneClass}`}>
+          {sdkMessage}
+        </span>
       </div>
       <div
         className="rounded-lg h-[300px] relative border overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #E8F4FD, #D6EAF8 50%, #EBF5FB)",
+          background: "linear-gradient(180deg, rgba(248,250,252,0.96), rgba(226,232,240,0.9))",
           borderColor: "var(--region-border)",
         }}
       >
-        {/* 배경 텍스트 */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-          style={{ color: "var(--region-primary)", opacity: 0.15 }}
-        >
-          <div className="text-3xl mb-1">🗺️</div>
-          <div className="text-xs font-bold">중부권 (대전·세종·충남·충북)</div>
-          <div className="text-[10px] mt-0.5">Kakao Maps API 연동 예정</div>
-        </div>
+        <div ref={mapContainerRef} className="absolute inset-0" />
 
-        {/* 국사 핀 */}
-        {stations.map((station) => {
-          const pos = getMapPosition(station.lat, station.lng);
-          if (!pos) return null;
-
-          const pinColors = {
-            정상: "var(--region-primary)",
-            점검필요: "var(--warn)",
-            긴급: "var(--danger)",
-          };
-
-          return (
-            <div
-              key={station.id}
-              className="absolute w-2.5 h-2.5 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-150 group"
-              style={{
-                left: `${pos.x}%`,
-                top: `${pos.y}%`,
-                backgroundColor: pinColors[station.status],
-                transform: "translate(-50%, -50%)",
-              }}
-              title={`${station.name} (${station.status})`}
-            >
-              {/* 툴팁 */}
-              <div className="hidden group-hover:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg border-l-2"
-                style={{ borderLeftColor: pinColors[station.status] }}
-              >
-                <div className="font-bold">{station.name}</div>
-                <div className="text-gray-300">{station.status}</div>
-              </div>
+        {sdkStatus !== "ready" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/88 backdrop-blur-[1px]">
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center shadow-sm">
+              <div className="text-[11px] font-bold text-gray-700">지도 준비 중</div>
+              <div className="mt-1 text-[10px] text-gray-500">{sdkMessage}</div>
             </div>
-          );
-        })}
+          </div>
+        )}
 
         {/* 범례 */}
         <div className="absolute bottom-2.5 left-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md">
@@ -184,6 +265,10 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
           <div className="flex justify-between gap-4">
             <span className="text-gray-500">긴급</span>
             <span className="font-bold text-gray-900">{statusCounts.긴급}</span>
+          </div>
+          <div className="mt-1 flex justify-between gap-4 border-t border-gray-100 pt-1">
+            <span className="text-gray-500">전체</span>
+            <span className="font-bold text-gray-900">{stationCount}</span>
           </div>
         </div>
       </div>

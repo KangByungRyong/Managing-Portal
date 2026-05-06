@@ -10,6 +10,7 @@ import {
 } from "./types/navigation";
 import { TonghabPage } from "./pages/TonghabPage";
 import { GijigukPage } from "./pages/GijigukPage";
+import { RepeaterPage } from "./pages/RepeaterPage";
 
 export default function App() {
   const [region, setRegion] = useState<"central" | "west">(
@@ -140,42 +141,7 @@ export default function App() {
 
           {level3 === "junggye" && (
             <div className="flex-1 overflow-y-auto">
-              <div className="space-y-3.5">
-                <div className="grid grid-cols-4 gap-2.5">
-                  <KpiCard
-                    label="중계기 Site 수"
-                    value={632}
-                    unit="개"
-                    yoy={2.8}
-                  />
-                  <KpiCard
-                    label="5G 장비 수"
-                    value={845}
-                    unit="개"
-                    yoy={15.6}
-                  />
-                  <KpiCard
-                    label="LTE 장비 수"
-                    value={723}
-                    unit="개"
-                    yoy={-3.2}
-                  />
-                  <KpiCard
-                    label="3G 장비 수"
-                    value={156}
-                    unit="개"
-                    yoy={-38.4}
-                  />
-                </div>
-                <BlankPage
-                  title="중계기 상세 콘텐츠"
-                  plannedFeatures={[
-                    "세대별(5G/LTE/3G) Site 수 및 전년 대비 증감",
-                    "세대별 장비 수 및 전년 대비 증감",
-                    "중계기 세부 현황 테이블 (TBD)",
-                  ]}
-                />
-              </div>
+              <RepeaterPage region={region} />
             </div>
           )}
           {level3 === "lora" && (

@@ -120,12 +120,12 @@ export function TonghabPage({ region }: TonghabPageProps) {
         <div className="col-span-6">
           <MapPlaceholder
             stationCount={filteredData.length}
-            stations={filteredData.map((s) => ({
-              id: s.id,
-              name: s.name,
-              lat: s.lat,
-              lng: s.lng,
-              status: s.status,
+            stations={filteredData.map((station) => ({
+              id: station.id,
+              name: station.name,
+              lat: station.lat,
+              lng: station.lng,
+              status: station.status,
             }))}
           />
         </div>
@@ -167,20 +167,12 @@ export function TonghabPage({ region }: TonghabPageProps) {
       </div>
 
       {/* 국사 세부 현황 */}
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-          <div
-            className="w-0.5 h-4 rounded"
-            style={{ backgroundColor: "var(--region-primary)" }}
-          />
-          국사 세부 현황
-          <span className="text-xs text-gray-400 font-normal ml-auto">
-            주소, Moderniza 현황 등
-          </span>
+      <div className="bg-white rounded-lg shadow-sm flex flex-col">
+        {/* 제목 */}
+        <div className="px-3.5 pt-3.5 pb-2 flex-shrink-0 border-b border-gray-100">
+          <h3 className="text-sm font-bold text-gray-700">국사 세부 현황</h3>
         </div>
-        <div>
-          <TonghabTable data={filteredData} onStationClick={handleStationClick} />
-        </div>
+        <TonghabTable data={filteredData} onStationClick={handleStationClick} />
       </div>
 
       {/* List Sidebar */}

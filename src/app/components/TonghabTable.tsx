@@ -241,7 +241,7 @@ export function TonghabTable({
   return (
     <div className="bg-white rounded-lg shadow-sm flex flex-col">
       {/* 필터 영역 */}
-      <div className="px-5 pt-3 pb-1.5 flex-shrink-0">
+      <div className="px-3.5 pt-3 pb-1.5 flex-shrink-0">
         {/* 키워드 검색 & 상태 필터 */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
@@ -368,7 +368,7 @@ export function TonghabTable({
 
       {/* 활성 필터 칩 */}
       {getActiveFilterChips().length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap px-5 pb-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-wrap px-3.5 pb-1.5 flex-shrink-0">
           {getActiveFilterChips().map((chip, index) => (
             <div
               key={index}
@@ -405,7 +405,7 @@ export function TonghabTable({
       )}
 
       {/* 테이블 */}
-      <div className="px-5 pt-1.5 pb-5 overflow-x-auto">
+      <div className="px-3.5 pt-1.5 pb-5 overflow-x-auto flex-1 min-h-0">
         <table className="w-full border-collapse text-xs">
           <thead
             className="sticky top-0 z-10"
@@ -415,10 +415,11 @@ export function TonghabTable({
           >
             <tr>
               <th
-                className="text-left py-2 px-3 font-bold whitespace-nowrap"
+                className="sticky left-0 z-20 text-left py-2 px-3 font-bold whitespace-nowrap border-r"
                 style={{
                   backgroundColor: "var(--region-light)",
                   color: "var(--region-primary)",
+                  borderRightColor: "var(--region-border)",
                 }}
               >
                 국사명
@@ -655,9 +656,12 @@ export function TonghabTable({
                 <tr
                   key={station.id}
                   onClick={() => onStationClick?.(station)}
-                  className="border-b border-gray-100 cursor-pointer transition-colors hover:bg-[var(--region-light)]"
+                  className="group border-b border-gray-100 cursor-pointer transition-colors hover:bg-[var(--region-light)]"
                 >
-                  <td className="py-2 px-3 text-gray-700 whitespace-nowrap font-medium">
+                  <td
+                    className="sticky left-0 z-10 py-2 px-3 text-gray-700 whitespace-nowrap font-medium border-r bg-white group-hover:bg-[var(--region-light)]"
+                    style={{ borderRightColor: "var(--region-border)" }}
+                  >
                     {station.name}
                   </td>
                   <td className="py-2 px-3 whitespace-nowrap text-center">

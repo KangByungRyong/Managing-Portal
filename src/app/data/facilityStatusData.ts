@@ -1105,6 +1105,272 @@ export function getGijigukKpi(
   };
 }
 
+export type GijigukAbnormalSeverity = "주의" | "경계" | "심각";
+
+export interface GijigukAbnormalSiteStatus {
+  eventId: string;
+  region: HqDivision;
+  team: AccessTeam;
+  state: string;
+  city: string;
+  address?: string;
+  siteCode: string;
+  siteName: string;
+  severity: GijigukAbnormalSeverity;
+  abnormalCategories: string[];
+  equipmentNames?: string[];
+  detectedAt: string;
+}
+
+export const GIJIGUK_ABNORMAL_SITE_DUMMY_DATA: GijigukAbnormalSiteStatus[] = [
+  {
+    eventId: "ABN-CEN-001",
+    region: "central",
+    team: "충남Access운용팀",
+    state: "충남",
+    city: "천안시",
+    siteCode: "CN-CHN-SB-002",
+    siteName: "천안시 서북구-2",
+    severity: "주의",
+    abnormalCategories: ["전원", "LTE DU", "백홀"],
+    equipmentNames: ["DU20내", "ENB내", "CDU20_EL"],
+    detectedAt: "2026-05-06 09:12",
+  },
+  {
+    eventId: "ABN-CEN-002",
+    region: "central",
+    team: "충남Access운용팀",
+    state: "세종",
+    city: "세종시",
+    siteCode: "SJ-HB-001",
+    siteName: "세종시 행복동-1",
+    severity: "경계",
+    abnormalCategories: ["5G DU", "냉각"],
+    equipmentNames: ["DUH20", "CDU10", "DU20내WL"],
+    detectedAt: "2026-05-06 10:28",
+  },
+  {
+    eventId: "ABN-CEN-003",
+    region: "central",
+    team: "충북Access운용팀",
+    state: "충북",
+    city: "청주시",
+    siteCode: "CB-CJ-HD-007",
+    siteName: "청주시 흥덕구-7",
+    severity: "심각",
+    abnormalCategories: ["WCDMA RRU", "전송", "배터리"],
+    equipmentNames: ["E3내", "E3R외", "ENB-ELG"],
+    detectedAt: "2026-05-06 08:47",
+  },
+  {
+    eventId: "ABN-CEN-004",
+    region: "central",
+    team: "충북Access운용팀",
+    state: "충북",
+    city: "충주시",
+    siteCode: "CB-CJ-MH-003",
+    siteName: "충주시 목행동-3",
+    severity: "주의",
+    abnormalCategories: ["LoRa GW", "환경"],
+    equipmentNames: ["LRGW", "LRGWIB"],
+    detectedAt: "2026-05-06 11:03",
+  },
+  {
+    eventId: "ABN-WST-001",
+    region: "west",
+    team: "전남Access운용팀",
+    state: "전남",
+    city: "여수시",
+    siteCode: "JN-YS-HD-005",
+    siteName: "여수시 학동-5",
+    severity: "경계",
+    abnormalCategories: ["5G AAU", "전원"],
+    equipmentNames: ["CDU20_NK", "DUH10", "ENB외"],
+    detectedAt: "2026-05-06 09:36",
+  },
+  {
+    eventId: "ABN-WST-002",
+    region: "west",
+    team: "전북Access운용팀",
+    state: "전북",
+    city: "전주시",
+    siteCode: "JB-JJ-DJ-004",
+    siteName: "전주시 덕진구-4",
+    severity: "주의",
+    abnormalCategories: ["LTE ENB", "동기"],
+    equipmentNames: ["ENB내", "DU30내", "DU35"],
+    detectedAt: "2026-05-06 10:11",
+  },
+  {
+    eventId: "ABN-WST-003",
+    region: "west",
+    team: "제주Access운용팀",
+    state: "제주",
+    city: "제주시",
+    siteCode: "JJ-NH-009",
+    siteName: "제주시 노형동-9",
+    severity: "심각",
+    abnormalCategories: ["전송", "배터리", "냉각"],
+    equipmentNames: ["CDU10외", "DUH20외", "LRGWREV"],
+    detectedAt: "2026-05-06 07:58",
+  },
+  {
+    eventId: "ABN-WST-004",
+    region: "west",
+    team: "전남Access운용팀",
+    state: "광주",
+    city: "북구",
+    siteCode: "GJ-BK-002",
+    siteName: "광주 북구-2",
+    severity: "주의",
+    abnormalCategories: ["WCDMA", "외부환경"],
+    equipmentNames: ["E3외", "IPNB3S", "FX"],
+    detectedAt: "2026-05-06 11:42",
+  },
+];
+
+export function getGijigukAbnormalSiteStatus(
+  hq: HqDivision,
+  team: AccessTeam | null = null
+): GijigukAbnormalSiteStatus[] {
+  return GIJIGUK_ABNORMAL_SITE_DUMMY_DATA.filter(
+    (item) => item.region === hq && (team === null || item.team === team)
+  );
+}
+
+export type RepeaterAbnormalSeverity = "주의" | "경계" | "심각";
+
+export interface RepeaterAbnormalSiteStatus {
+  eventId: string;
+  region: HqDivision;
+  team: AccessTeam;
+  state: string;
+  city: string;
+  address?: string;
+  siteCode: string;
+  siteName: string;
+  severity: RepeaterAbnormalSeverity;
+  abnormalCategories: string[];
+  equipmentNames?: string[];
+  detectedAt: string;
+}
+
+export const REPEATER_ABNORMAL_SITE_DUMMY_DATA: RepeaterAbnormalSiteStatus[] = [
+  {
+    eventId: "RPT-ABN-CEN-001",
+    region: "central",
+    team: "충남Access운용팀",
+    state: "충남",
+    city: "천안시 동남구",
+    siteCode: "RPT-CN-CHN-DN-004",
+    siteName: "천안 동남4 중계기",
+    severity: "주의",
+    abnormalCategories: ["5G AAU", "전원", "광전송"],
+    equipmentNames: ["AAU20-3.5G-32T(EL)", "RO-GIRO-DS(8100)", "RO-PRU-3.5G-4T"],
+    detectedAt: "2026-05-06 09:18",
+  },
+  {
+    eventId: "RPT-ABN-CEN-002",
+    region: "central",
+    team: "충남Access운용팀",
+    state: "세종",
+    city: "세종시",
+    siteCode: "RPT-SJ-HD-002",
+    siteName: "세종 행복2 중계기",
+    severity: "경계",
+    abnormalCategories: ["LTE MIBOS", "냉각", "환경센서"],
+    equipmentNames: ["RO-IRO-T(8120)", "RO-MIBOS-T-L60", "RRU(SS)"],
+    detectedAt: "2026-05-06 10:02",
+  },
+  {
+    eventId: "RPT-ABN-CEN-003",
+    region: "central",
+    team: "충북Access운용팀",
+    state: "충북",
+    city: "청주시 흥덕구",
+    siteCode: "RPT-CB-CJ-HD-007",
+    siteName: "청주 흥덕7 중계기",
+    severity: "심각",
+    abnormalCategories: ["WCDMA RHU", "배터리", "백홀"],
+    equipmentNames: ["RHU-DUON5", "RHU-DUON20", "SF-DUO"],
+    detectedAt: "2026-05-06 08:41",
+  },
+  {
+    eventId: "RPT-ABN-CEN-004",
+    region: "central",
+    team: "충북Access운용팀",
+    state: "충북",
+    city: "충주시",
+    siteCode: "RPT-CB-CJ-CS-003",
+    siteName: "충주 중심3 중계기",
+    severity: "주의",
+    abnormalCategories: ["WiBro", "동기", "외부환경"],
+    equipmentNames: ["SF-TM023", "SF-T", "RO-DUO-AA2020"],
+    detectedAt: "2026-05-06 11:12",
+  },
+  {
+    eventId: "RPT-ABN-WST-001",
+    region: "west",
+    team: "전남Access운용팀",
+    state: "전남",
+    city: "여수시",
+    siteCode: "RPT-JN-YS-HD-005",
+    siteName: "여수 학동5 중계기",
+    severity: "경계",
+    abnormalCategories: ["5G DU", "전원", "광회선"],
+    equipmentNames: ["AAU20-3.5G-64T(NK)", "RO-GIRO-QS(8126)", "RO-PRU-3.5G-4T"],
+    detectedAt: "2026-05-06 09:44",
+  },
+  {
+    eventId: "RPT-ABN-WST-002",
+    region: "west",
+    team: "전북Access운용팀",
+    state: "전북",
+    city: "전주시",
+    siteCode: "RPT-JB-JJ-DJ-004",
+    siteName: "전주 덕진4 중계기",
+    severity: "주의",
+    abnormalCategories: ["LTE RRU", "온도", "수신레벨"],
+    equipmentNames: ["RRU_800M_R2212(ELG)", "RO-IRO-DS(8100)", "RO-MIBOS-AD-L60"],
+    detectedAt: "2026-05-06 10:26",
+  },
+  {
+    eventId: "RPT-ABN-WST-003",
+    region: "west",
+    team: "제주Access운용팀",
+    state: "제주",
+    city: "제주시",
+    siteCode: "RPT-JJ-JS-NH-006",
+    siteName: "제주 노형6 중계기",
+    severity: "심각",
+    abnormalCategories: ["이동형 RHU", "배터리", "전송"],
+    equipmentNames: ["RHU-DUON20-OMHU", "RO-DUO-AA2020-CMHU", "SF-DUO20"],
+    detectedAt: "2026-05-06 07:52",
+  },
+  {
+    eventId: "RPT-ABN-WST-004",
+    region: "west",
+    team: "전남Access운용팀",
+    state: "광주",
+    city: "북구",
+    siteCode: "RPT-GJ-BK-002",
+    siteName: "광주 북구2 중계기",
+    severity: "주의",
+    abnormalCategories: ["WCDMA", "안테나", "외부환경"],
+    equipmentNames: ["RHU-DUON5-OMHU", "OR-DUO2", "LR-DUO"],
+    detectedAt: "2026-05-06 11:37",
+  },
+];
+
+export function getRepeaterAbnormalSiteStatus(
+  hq: HqDivision,
+  team: AccessTeam | null = null
+): RepeaterAbnormalSiteStatus[] {
+  return REPEATER_ABNORMAL_SITE_DUMMY_DATA.filter(
+    (item) => item.region === hq && (team === null || item.team === team)
+  );
+}
+
 // ── 광중계기 ─────────────────────────────────────────────────
 
 export function filterRepeater(

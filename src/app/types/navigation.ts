@@ -67,10 +67,10 @@ export const navigationConfig = {
         icon: "🏢",
         tabs: {
           tonghab: { label: "통합국 현황", status: "complete" },
-          giji: { label: "기지국 현황", status: "structure" },
+          giji: { label: "기지국 현황", status: "complete" },
           junggye: {
             label: "중계기 현황",
-            status: "structure",
+            status: "complete",
           },
           lora: {
             label: "WiFi / Femto 현황",

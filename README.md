@@ -8,4 +8,13 @@
   Run `npm i` to install the dependencies.
 
   Run `npm run dev` to start the development server.
+
+  ## Kakao Map Dev Setup
+
+  1. Create `.env.local` in the project root.
+  2. Add `VITE_KAKAO_MAP_APP_KEY=<your_kakao_javascript_key>`.
+  3. In Kakao Developers, register the web platform domain as `http://localhost:5173`.
+  4. Restart the dev server after changing the env file.
+
+  The current implementation only loads the Kakao Maps SDK for development verification. The visible map card remains a static preview until the actual map rendering step is added.
   
