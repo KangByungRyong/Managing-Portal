@@ -729,3 +729,53 @@ export function getGijigukMarkers(
       region: s.adminRegion,
     }));
 }
+
+// ─── 시단위 집계 (기존 파일 하단에 추가) ─────────────────────
+
+export interface CityStats {
+  city:       string;
+  team:       AccessTeam;
+  totalSites: number;
+  fiveG:      number;
+  lte:        number;
+  threeG:     number;
+  lora:       number;
+  normal:     number;
+  needCheck:  number;
+  urgent:     number;
+  avgUptime:  number;
+}
+
+export function getCityStats(
+  hq: HqDivision,
+  team: AccessTeam | null
+): CityStats[] {
+  const sites = gijigukSites.filter(
+    (s) => s.hq === hq && (team === null || s.team === team)
+  );
+
+  const cityMap = new Map<string, GijigukSite[]>();
+  sites.forEach((s) => {
+    const list = cityMap.get(s.adminRegion) ?? [];
+    list.push(s);
+    cityMap.set(s.adminRegion, list);
+  });
+
+  return Array.from(cityMap.entries()).map(([city, list]) => ({
+    city,
+    team:       list[0].team,
+    totalSites: list.length,
+    fiveG:      list.reduce((a, s) => a + s.equip.fiveG.count, 0),
+    lte:        list.reduce((a, s) => a + s.equip.lte.count, 0),
+    threeG:     list.reduce((a, s) => a + s.equip.threeG.count, 0),
+    lora:       list.reduce((a, s) => a + s.equip.lora.count, 0),
+    normal:     list.filter((s) => s.siteStatus === "정상").length,
+    needCheck:  list.filter((s) => s.siteStatus === "점검필요").length,
+    urgent:     list.filter((s) => s.siteStatus === "긴급").length,
+    avgUptime:
+      Math.round(
+        (list.reduce((a, s) => a + s.uptime, 0) / list.length) * 10
+      ) / 10,
+  }));
+}
+ 

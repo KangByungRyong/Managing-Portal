@@ -101,7 +101,7 @@ export default function App() {
             ([key, value]) => ({
               id: key,
               label: value.label,
-              status: value.status,
+              status: value.status as "complete" | "structure" | "blank" | undefined,
             }),
           )
         : [];

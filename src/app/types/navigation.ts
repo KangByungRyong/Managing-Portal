@@ -73,7 +73,7 @@ export const navigationConfig = {
             status: "structure",
           },
           lora: {
-            label: "LoRa / WiFi / Femto 현황",
+            label: "WiFi / Femto 현황",
             status: "blank",
           },
         },
