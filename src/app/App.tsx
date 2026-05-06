@@ -4,11 +4,17 @@ import { Navigation } from "./components/Navigation";
 import { BlankPage } from "./components/BlankPage";
 import { KpiCard } from "./components/KpiCard";
 import { Level3Tabs } from "./components/Level3Tabs";
-import { NavigationState, navigationConfig } from "./types/navigation";
+import {
+  NavigationState,
+  navigationConfig,
+} from "./types/navigation";
 import { TonghabPage } from "./pages/TonghabPage";
+import { GijigukPage } from "./pages/GijigukPage";
 
 export default function App() {
-  const [region, setRegion] = useState<"central" | "west">("central");
+  const [region, setRegion] = useState<"central" | "west">(
+    "central",
+  );
   const [navState, setNavState] = useState<NavigationState>({
     level1: "status",
     level2: "facility",
@@ -34,8 +40,8 @@ export default function App() {
 
     // DB 업데이트 시간은 YYYY-MM-DD 형식
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
     setDbLastUpdated(`${year}-${month}-${day}`);
 
     // 1초마다 현재 시간 업데이트
@@ -58,7 +64,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute(
       "data-region",
-      region === "central" ? "central" : "west"
+      region === "central" ? "central" : "west",
     );
   }, [region]);
 
@@ -68,8 +74,8 @@ export default function App() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
     setDbLastUpdated(`${year}-${month}-${day}`);
     setIsUpdating(false);
   };
@@ -84,13 +90,16 @@ export default function App() {
 
     // 현황 > 시설 현황
     if (level1 === "status" && level2 === "facility") {
-      const level2Config = navigationConfig.status.children?.facility;
+      const level2Config =
+        navigationConfig.status.children?.facility;
       const level3Tabs = level2Config?.tabs
-        ? Object.entries(level2Config.tabs).map(([key, value]) => ({
-            id: key,
-            label: value.label,
-            status: value.status,
-          }))
+        ? Object.entries(level2Config.tabs).map(
+            ([key, value]) => ({
+              id: key,
+              label: value.label,
+              status: value.status,
+            }),
+          )
         : [];
 
       return (
@@ -112,32 +121,38 @@ export default function App() {
           )}
 
           {/* 콘텐츠 */}
-          {level3 === "tonghab" && <TonghabPage region={region} />}
-          {level3 === "giji" && (
-            <div className="space-y-3.5">
-              <div className="grid grid-cols-4 gap-2.5">
-                <KpiCard label="기지국 Site 수" value={1842} unit="개" yoy={12.5} />
-                <KpiCard label="5G 장비 수" value={2156} unit="개" yoy={18.3} />
-                <KpiCard label="LTE 장비 수" value={1623} unit="개" yoy={-5.2} />
-                <KpiCard label="3G 장비 수" value={421} unit="개" yoy={-42.1} />
-              </div>
-              <BlankPage
-                title="기지국 상세 콘텐츠"
-                plannedFeatures={[
-                  "세대별(5G/LTE/3G) Site 수 및 전년 대비 증감",
-                  "세대별 장비 수 및 전년 대비 증감",
-                  "기지국 세부 현황 테이블 (TBD)",
-                ]}
-              />
-            </div>
+          {level3 === "tonghab" && (
+            <TonghabPage region={region} />
           )}
+          {level3 === "giji" && <GijigukPage region={region} />}
+
           {level3 === "junggye" && (
             <div className="space-y-3.5">
               <div className="grid grid-cols-4 gap-2.5">
-                <KpiCard label="중계기 Site 수" value={632} unit="개" yoy={2.8} />
-                <KpiCard label="5G 장비 수" value={845} unit="개" yoy={15.6} />
-                <KpiCard label="LTE 장비 수" value={723} unit="개" yoy={-3.2} />
-                <KpiCard label="3G 장비 수" value={156} unit="개" yoy={-38.4} />
+                <KpiCard
+                  label="중계기 Site 수"
+                  value={632}
+                  unit="개"
+                  yoy={2.8}
+                />
+                <KpiCard
+                  label="5G 장비 수"
+                  value={845}
+                  unit="개"
+                  yoy={15.6}
+                />
+                <KpiCard
+                  label="LTE 장비 수"
+                  value={723}
+                  unit="개"
+                  yoy={-3.2}
+                />
+                <KpiCard
+                  label="3G 장비 수"
+                  value={156}
+                  unit="개"
+                  yoy={-38.4}
+                />
               </div>
               <BlankPage
                 title="중계기 상세 콘텐츠"
@@ -160,9 +175,9 @@ export default function App() {
               ]}
             />
           )}
-          {!["tonghab", "giji", "junggye", "lora"].includes(level3 || "") && (
-            <BlankPage title="준비 중인 페이지입니다" />
-          )}
+          {!["tonghab", "giji", "junggye", "lora"].includes(
+            level3 || "",
+          ) && <BlankPage title="준비 중인 페이지입니다" />}
         </>
       );
     }
@@ -173,7 +188,11 @@ export default function App() {
         <BlankPage
           title="재고 현황"
           description="추후 구성 예정"
-          plannedFeatures={["재고 관리 현황", "입출고 현황", "재고 분석 지표"]}
+          plannedFeatures={[
+            "재고 관리 현황",
+            "입출고 현황",
+            "재고 분석 지표",
+          ]}
         />
       );
     }
@@ -184,7 +203,11 @@ export default function App() {
         <BlankPage
           title="특화 지표"
           description="추후 구성 예정"
-          plannedFeatures={["특화 항목 1 (TBD)", "특화 항목 2 (TBD)", "특화 항목 3 (TBD)"]}
+          plannedFeatures={[
+            "특화 항목 1 (TBD)",
+            "특화 항목 2 (TBD)",
+            "특화 항목 3 (TBD)",
+          ]}
         />
       );
     }
@@ -202,12 +225,18 @@ export default function App() {
         onUpdate={handleUpdate}
         isUpdating={isUpdating}
       />
-      <Navigation state={navState} onChange={setNavState} onNavExpand={setIsNavExpanded} />
+      <Navigation
+        state={navState}
+        onChange={setNavState}
+        onNavExpand={setIsNavExpanded}
+      />
       <main
         className="p-4 overflow-hidden transition-all duration-300"
         style={{
-          marginTop: isNavExpanded ? '140px' : '100px',
-          height: isNavExpanded ? 'calc(100vh - 140px)' : 'calc(100vh - 100px)'
+          marginTop: isNavExpanded ? "140px" : "100px",
+          height: isNavExpanded
+            ? "calc(100vh - 140px)"
+            : "calc(100vh - 100px)",
         }}
       >
         {renderContent()}

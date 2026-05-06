@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { navigationConfig, NavigationState, TabLevel1 } from "../types/navigation";
+import {
+  navigationConfig,
+  NavigationState,
+  TabLevel1,
+} from "../types/navigation";
 
 interface NavigationProps {
   state: NavigationState;
@@ -7,11 +11,19 @@ interface NavigationProps {
   onNavExpand: (expanded: boolean) => void;
 }
 
-export function Navigation({ state, onChange, onNavExpand }: NavigationProps) {
+export function Navigation({
+  state,
+  onChange,
+  onNavExpand,
+}: NavigationProps) {
   const [isLevel2Visible, setIsLevel2Visible] = useState(false);
-  const level1Tabs = Object.keys(navigationConfig) as TabLevel1[];
+  const level1Tabs = Object.keys(
+    navigationConfig,
+  ) as TabLevel1[];
   const level1Config = navigationConfig[state.level1];
-  const level2Tabs = level1Config.children ? Object.keys(level1Config.children) : [];
+  const level2Tabs = level1Config.children
+    ? Object.keys(level1Config.children)
+    : [];
 
   useEffect(() => {
     onNavExpand(isLevel2Visible && level2Tabs.length > 0);
@@ -32,15 +44,23 @@ export function Navigation({ state, onChange, onNavExpand }: NavigationProps) {
             <button
               key={tab}
               onClick={() => {
-                const newState: NavigationState = { level1: tab };
+                const newState: NavigationState = {
+                  level1: tab,
+                };
                 // 자동으로 첫 번째 하위 탭 선택
                 if (config.children) {
-                  const firstChild = Object.keys(config.children)[0];
+                  const firstChild = Object.keys(
+                    config.children,
+                  )[0];
                   newState.level2 = firstChild;
-                  const childConfig = (config.children as any)[firstChild];
+                  const childConfig = (config.children as any)[
+                    firstChild
+                  ];
                   // 시설 현황인 경우 첫 번째 탭 선택
                   if (childConfig.tabs) {
-                    newState.level3 = Object.keys(childConfig.tabs)[0];
+                    newState.level3 = Object.keys(
+                      childConfig.tabs,
+                    )[0];
                   }
                 }
                 onChange(newState);
@@ -81,7 +101,9 @@ export function Navigation({ state, onChange, onNavExpand }: NavigationProps) {
                   };
                   // 시설 현황인 경우 첫 번째 탭 선택
                   if (config.tabs) {
-                    newState.level3 = Object.keys(config.tabs)[0];
+                    newState.level3 = Object.keys(
+                      config.tabs,
+                    )[0];
                   }
                   onChange(newState);
                 }}
@@ -93,13 +115,16 @@ export function Navigation({ state, onChange, onNavExpand }: NavigationProps) {
                 style={
                   isActive
                     ? {
-                        backgroundColor: "var(--region-primary)",
+                        backgroundColor:
+                          "var(--region-primary)",
                         borderColor: "var(--region-primary)",
                       }
                     : { color: "var(--region-primary)" }
                 }
               >
-                {config.icon && <span className="mr-1.5">{config.icon}</span>}
+                {config.icon && (
+                  <span className="mr-1.5">{config.icon}</span>
+                )}
                 {config.label}
               </button>
             );
