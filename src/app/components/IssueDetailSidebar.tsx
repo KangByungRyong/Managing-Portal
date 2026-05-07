@@ -24,8 +24,8 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
     item?.severity === "심각"
       ? "bg-rose-50 text-rose-600 border-rose-200"
       : item?.severity === "경계"
-        ? "bg-amber-50 text-amber-600 border-amber-200"
-        : "bg-blue-50 text-blue-600 border-blue-200";
+      ? "bg-amber-50 text-amber-600 border-amber-200"
+      : "bg-blue-50 text-blue-600 border-blue-200";
 
   return (
     <>
@@ -60,9 +60,13 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
               <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-base font-bold text-gray-800">{item.siteName}</h3>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${severityClass}`}>{item.severity}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${severityClass}`}>
+                    {item.severity}
+                  </span>
                 </div>
-                <div className="text-xs text-gray-500">{item.state} {item.city}</div>
+                <div className="text-xs text-gray-500">
+                  {item.state} {item.city}
+                </div>
               </div>
 
               <div className="rounded-xl border border-gray-100 bg-white p-4">
@@ -88,10 +92,7 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
                     <span className="text-xs text-gray-400">이슈 정보 없음</span>
                   )}
                   {item.abnormalCategories.map((issue) => (
-                    <span
-                      key={issue}
-                      className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700"
-                    >
+                    <span key={issue} className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700">
                       {issue}
                     </span>
                   ))}
@@ -105,10 +106,7 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
                     <span className="text-xs text-gray-400">장비 정보 없음</span>
                   )}
                   {item.equipmentNames?.map((equipName) => (
-                    <span
-                      key={equipName}
-                      className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700"
-                    >
+                    <span key={equipName} className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700">
                       {equipName}
                     </span>
                   ))}

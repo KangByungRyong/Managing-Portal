@@ -12,13 +12,17 @@ import { TonghabPage } from "./pages/TonghabPage";
 import { GijigukPage } from "./pages/GijigukPage";
 import { RepeaterPage } from "./pages/RepeaterPage";
 import { SafetyWorkPage } from "./pages/SafetyWorkPage";
+import { HomePage } from "./pages/HomePage";
+import { SecurityPage } from "./pages/SecurityPage";
+import { StabilityPage } from "./pages/StabilityPage";
+import { InventoryPage } from "./pages/InventoryPage";
 
 export default function App() {
   const [region, setRegion] = useState<"central" | "west">(
     "central",
   );
   const [navState, setNavState] = useState<NavigationState>({
-    level1: "status",
+    level1: "home",
     level2: "facility",
     level3: "tonghab",
   });
@@ -88,8 +92,8 @@ export default function App() {
     // 홈 페이지
     if (level1 === "home") {
       return (
-        <div className="flex-1 overflow-y-auto">
-          <BlankPage title="준비 중인 페이지입니다" />
+        <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
+          <HomePage region={region} onNavigate={setNavState} />
         </div>
       );
     }
@@ -173,15 +177,7 @@ export default function App() {
     if (level1 === "status" && level2 === "inventory") {
       return (
         <div className="flex-1 overflow-y-auto">
-          <BlankPage
-            title="재고 현황"
-            description="추후 구성 예정"
-            plannedFeatures={[
-              "재고 관리 현황",
-              "입출고 현황",
-              "재고 분석 지표",
-            ]}
-          />
+          <InventoryPage region={region} />
         </div>
       );
     }
@@ -239,24 +235,27 @@ export default function App() {
               <SafetyWorkPage region={region} />
             </div>
           )}
-          {level3 === "nsr" && (
+          {level3 === "security" && (
             <div className="flex-1 overflow-y-auto">
-              <BlankPage
-                title="NSR 현황"
-                description="추후 구성 예정"
-                plannedFeatures={[
-                  "NSR 현황 목록",
-                  "NSR 처리 현황",
-                  "NSR 통계 지표",
-                ]}
-              />
+              <SecurityPage region={region} />
             </div>
           )}
-          {!["work", "nsr"].includes(level3 || "") && (
+          {!["work", "security"].includes(level3 || "") && (
             <div className="flex-1 overflow-y-auto">
               <BlankPage title="준비 중인 페이지입니다" />
             </div>
           )}
+        </div>
+      );
+    }
+
+    // 현황 > 안정
+    if (level1 === "status" && level2 === "stability") {
+      return (
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto">
+            <StabilityPage region={region} />
+          </div>
         </div>
       );
     }

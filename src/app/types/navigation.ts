@@ -37,20 +37,11 @@ export type TabLevel2Task = "meeting" | "todo";
 // 🆕 안전 하위 탭
 export type TabLevel3Safety = "work" | "nsr";
 
-// 🆕 안정 하위 탭 (island는 서부 전용)
-export type TabLevel3Stability =
-  | "wildfire"
-  | "island"
-  | "office";
-
 export interface NavigationState {
   level1: TabLevel1;
   level2?: string;
   level3?: string;
 }
-
-// 🆕 서부 전용 탭 목록 (region 체크에 활용)
-export const WEST_ONLY_TABS: string[] = ["island"];
 
 export const navigationConfig = {
   home: {
@@ -84,7 +75,7 @@ export const navigationConfig = {
         icon: "🦺",
         tabs: {
           work: { label: "작업", status: "complete" },
-          nsr: { label: "NSR", status: "blank" },
+          security: { label: "보안", status: "complete" },
         },
       },
 
@@ -92,23 +83,6 @@ export const navigationConfig = {
       stability: {
         label: "안정",
         icon: "🛡️",
-        tabs: {
-          wildfire: {
-            label: "산불/이벤트",
-            status: "blank",
-            westOnly: false,
-          },
-          island: {
-            label: "특화(도서)",
-            status: "blank",
-            westOnly: true, // 🔒 서부 전용
-          },
-          office: {
-            label: "특화(사옥)",
-            status: "blank",
-            westOnly: false,
-          },
-        },
       },
 
       inventory: {
@@ -130,8 +104,6 @@ export const navigationConfig = {
     children: {
       capex: { label: "CapEx", status: "blank" },
       opex: { label: "OpEx", status: "blank" },
-      quality: { label: "품질 (CQ)", status: "blank" },      
-      security: { label: "보안", status: "blank" },
       autonomous: {
         label: "Autonomous Network",
         status: "blank",
