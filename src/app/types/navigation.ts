@@ -102,15 +102,16 @@ export const navigationConfig = {
     label: "지표",
     icon: "📈",
     children: {
-      capex: { label: "CapEx", status: "blank" },
-      opex: { label: "OpEx", status: "blank" },
+      capex: { label: "CapEx", icon: "🏗️", status: "complete" },
+      opex: { label: "OpEx", icon: "💸", status: "complete" },
       autonomous: {
         label: "Autonomous Network",
+        icon: "🤖",
         status: "blank",
       },
-      modernization: { label: "5대 현행화", status: "blank" },
-      esg: { label: "ESG", status: "blank" },
-      she: { label: "SHE", status: "blank" },
+      modernization: { label: "5대 현행화", icon: "🛠️", status: "blank" },
+      esg: { label: "ESG", icon: "🌿", status: "blank" },
+      she: { label: "SHE", icon: "🧯", status: "blank" },
     },
   },
 
@@ -118,9 +119,10 @@ export const navigationConfig = {
     label: "본부 중점",
     icon: "🎯",
     children: {
-      slim: { label: "Network Slim화", status: "blank" },
+      slim: { label: "Network Slim화", icon: "🪶", status: "blank" },
       maintenance: {
         label: "설비 유지보수 및 최적화",
+        icon: "🔧",
         status: "blank",
       },
     },
@@ -132,9 +134,10 @@ export const navigationConfig = {
     children: {
       meeting: {
         label: "주요 회의 내용 / F/U 현황",
+        icon: "🗓️",
         status: "blank",
       },
-      todo: { label: "To-Do List", status: "blank" },
+      todo: { label: "To-Do List", icon: "📝", status: "blank" },
     },
   },
 };

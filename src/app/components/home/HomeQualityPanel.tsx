@@ -11,7 +11,7 @@ import {
 function CqBar({ label, value, color }: CqBarItem & { color: string }) {
   return (
     <div className="flex items-center gap-2 py-0.5">
-      <span className="text-[10px] text-gray-500 w-28 shrink-0 text-right leading-tight">
+      <span className="text-xs text-gray-500 w-28 shrink-0 text-right leading-tight">
         {label}
       </span>
       <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
@@ -20,7 +20,7 @@ function CqBar({ label, value, color }: CqBarItem & { color: string }) {
           style={{ width: `${Math.min(value, 100)}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-[11px] font-semibold text-gray-700 w-12 text-right tabular-nums">
+      <span className="text-[14px] font-semibold text-gray-700 w-14 text-right tabular-nums">
         {value.toFixed(2)}%
       </span>
     </div>
@@ -62,8 +62,8 @@ function CqKpiCard({ title, label, snapshot, gradeKey, barColor, accentColor, on
       }
     >
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-bold" style={{ color: accentColor }}>{title}</span>
-        <span className="ml-auto text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">{label}</span>
+        <span className="text-base font-bold leading-snug" style={{ color: accentColor }}>{title}</span>
+        <span className="ml-auto text-[14px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">{label}</span>
       </div>
       <div className="flex flex-col gap-2">
         {items.map((item) => (
@@ -79,7 +79,7 @@ function EndcPie({ title, data }: { title: string; data: EndcSlice[] }) {
   const filtered = data.filter((d) => d.value > 0);
   return (
     <div>
-      <p className="text-[10px] font-semibold text-gray-500 mb-1.5">{title}</p>
+      <p className="text-xs font-semibold text-gray-500 mb-1.5">{title}</p>
       <div className="flex items-center gap-2">
         {/* 파이 차트 */}
         <div style={{ width: 76, height: 76, flexShrink: 0 }}>
@@ -97,14 +97,14 @@ function EndcPie({ title, data }: { title: string; data: EndcSlice[] }) {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ fontSize: 10 }} />
+              <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
         {/* 우측 Legend */}
         <div className="flex flex-col gap-1.5 flex-1 min-w-0">
           {data.map((item) => (
-            <div key={item.name} className="flex items-center justify-between text-[9px]">
+            <div key={item.name} className="flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-1 min-w-0">
                 <span
                   className="inline-block w-2 h-2 rounded-full shrink-0"
@@ -128,8 +128,8 @@ function EndcCard({ snapshot }: { snapshot: EndcSnapshot }) {
   return (
     <div className="bg-white rounded-lg shadow-sm px-3 pt-2.5 pb-3 flex flex-col gap-2 border-t-[3px] border-t-purple-500">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-bold text-purple-700">ENDC 시도호</span>
-        <span className="ml-auto text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
+        <span className="text-base font-bold text-purple-700 leading-snug">ENDC 시도호</span>
+        <span className="ml-auto text-[14px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">
           {snapshot.dateLabel.split(" ")[0]}
         </span>
       </div>

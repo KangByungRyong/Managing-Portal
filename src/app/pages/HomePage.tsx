@@ -16,7 +16,7 @@ import { QualityMapPanel } from "../components/home/QualityMapPanel";
 import { HomeTrendChart } from "../components/home/HomeTrendChart";
 import { HomeSafetyPanel } from "../components/home/HomeSafetyPanel";
 import { HomeStabilityPanel } from "../components/home/HomeStabilityPanel";
-import { BudgetPanel } from "../components/home/HomeCapexOpexPanel";
+import { BudgetPanel, HomeCapexKpiPanel } from "../components/home/HomeCapexOpexPanel";
 import { HomeIssuePanel } from "../components/home/HomeIssuePanel";
 import { StationKpiSidebar } from "../components/home/StationKpiSidebar";
 
@@ -133,15 +133,9 @@ export function HomePage({ region, onNavigate }: HomePageProps) {
             onNavigateSecurity={onNavigate ? () => onNavigate({ level1: "status", level2: "safety", level3: "security" }) : undefined}
           />
 
-          {/* CapEx 요약 */}
-          <BudgetPanel
-            title="CapEx 집행"
-            subtitle="Capital Expenditure"
-            items={d.capexSummary}
-            totalBudget={d.capexMeta.totalBudget}
-            totalActual={d.capexMeta.totalActual}
-            totalRate={d.capexMeta.totalRate}
-            baseDate={d.capexMeta.baseDate}
+          {/* CapEx 요약 — CapEx 페이지 KPI 4항목과 동일하게 표현 */}
+          <HomeCapexKpiPanel
+            data={d.capexKpi}
             onNavigate={onNavigate ? () => onNavigate({ level1: "metrics", level2: "capex" }) : undefined}
           />
 

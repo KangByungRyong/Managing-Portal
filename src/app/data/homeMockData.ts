@@ -586,48 +586,53 @@ const westStabilitySummary: StabilitySummaryItem[] = [
   { label: "사옥 전원 이상",        count: 0,  status: "정상" },
 ];
 
-// ── CapEx 요약 ────────────────────────────────────────────────────────────────
+// ── CapEx 요약 (CapEx 페이지 KPI 4항목과 일치) ───────────────────────────────
 
-export interface CapexSummaryItem {
-  label: string;
-  budget: number;
-  actual: number;
-  rate: number;
-}
-
-export interface CapexMeta {
-  totalBudget: number;
-  totalActual: number;
-  totalRate: number;
+export interface CapexKpi {
+  approvedAfeCount: number;  // 승인된 AFE 차수
+  totalConfirmM: number;     // AFE 승인예산 (백만원)
+  totalExecutionM: number;   // 공사 집행금액 (백만원)
+  soakRate: number;          // 예산 소진율 (%)
+  curMonthExecM: number;     // 당월 집행금액 (백만원)
+  completionRate: number;    // 공사 완료율 (%)
+  completionDone: number;    // 시험개통 완료 건수
+  completionTotal: number;   // 전체 사업 건수
+  curMonthCompletion: number; // 당월 개통 건수
   baseDate: string;
 }
 
-// ▶ 중부 CapEx: 5G 투자 집행률 높음
-const centralCapexSummary: CapexSummaryItem[] = [
-  { label: "5G 장비 투자",  budget: 280, actual: 134, rate: 47.9 },
-  { label: "LTE 장비 투자", budget:  75, actual:  41, rate: 54.7 },
-  { label: "인프라 투자",   budget:  50, actual:  20, rate: 40.0 },
-  { label: "기타",          budget:  20, actual:   7, rate: 35.0 },
-];
-const centralCapexMeta: CapexMeta = {
-  totalBudget: 425,
-  totalActual: 202,
-  totalRate: 47.5,
-  baseDate: "2026.05.06 기준",
+// ▶ 중부 CapEx (CapexPage와 동일한 데이터 기준)
+// totalConfirm = AFE 1차(9308) + AFE 2차(8200) = 17,508M
+// totalExecution = MONTHLY_EXEC 1~5월 합계 = 850+720+810+680+140 = 3,200M
+// soakRate = 3200/17508*100 ≈ 18.3%
+const centralCapexKpi: CapexKpi = {
+  approvedAfeCount: 2,
+  totalConfirmM:    17508,
+  totalExecutionM:  3200,
+  soakRate:         18.3,
+  curMonthExecM:    140,
+  completionRate:   16.7,
+  completionDone:   30,
+  completionTotal:  180,
+  curMonthCompletion: 4,
+  baseDate: "2026.05 기준",
 };
 
-// ▶ 서부 CapEx: 전체 예산 적고 집행률 낮음
-const westCapexSummary: CapexSummaryItem[] = [
-  { label: "5G 장비 투자",  budget: 170, actual:  53, rate: 31.2 },
-  { label: "LTE 장비 투자", budget:  45, actual:  22, rate: 48.9 },
-  { label: "인프라 투자",   budget:  30, actual:   8, rate: 26.7 },
-  { label: "기타",          budget:  10, actual:   2, rate: 20.0 },
-];
-const westCapexMeta: CapexMeta = {
-  totalBudget: 255,
-  totalActual:  85,
-  totalRate: 33.3,
-  baseDate: "2026.05.06 기준",
+// ▶ 서부 CapEx (CapexPage와 동일한 데이터 기준)
+// totalConfirm = AFE 1차(7880) + AFE 2차(6500) = 14,380M
+// totalExecution = MONTHLY_EXEC 1~5월 합계 = 740+630+720+600+110 = 2,800M
+// soakRate = 2800/14380*100 ≈ 19.5%
+const westCapexKpi: CapexKpi = {
+  approvedAfeCount: 2,
+  totalConfirmM:    14380,
+  totalExecutionM:  2800,
+  soakRate:         19.5,
+  curMonthExecM:    110,
+  completionRate:   14.1,
+  completionDone:   24,
+  completionTotal:  170,
+  curMonthCompletion: 2,
+  baseDate: "2026.05 기준",
 };
 
 // ── OpEx 요약 ─────────────────────────────────────────────────────────────────
@@ -812,8 +817,7 @@ export interface RegionalHomeData {
   cqHourTrend4th: TrendPoint[];
   safetySummary: SafetySummaryItem[];
   stabilitySummary: StabilitySummaryItem[];
-  capexSummary: CapexSummaryItem[];
-  capexMeta: CapexMeta;
+  capexKpi: CapexKpi;
   opexSummary: OpexSummaryItem[];
   opexMeta: OpexMeta;
   issueList: IssueItem[];
@@ -832,8 +836,7 @@ export const centralHomeData: RegionalHomeData = {
   cqHourTrend4th: centralCqTrend.hourData4th.all,
   safetySummary: centralSafetySummary,
   stabilitySummary: centralStabilitySummary,
-  capexSummary: centralCapexSummary,
-  capexMeta: centralCapexMeta,
+  capexKpi: centralCapexKpi,
   opexSummary: centralOpexSummary,
   opexMeta: centralOpexMeta,
   issueList: centralIssueList,
@@ -852,8 +855,7 @@ export const westHomeData: RegionalHomeData = {
   cqHourTrend4th: westCqTrend.hourData4th.all,
   safetySummary: westSafetySummary,
   stabilitySummary: westStabilitySummary,
-  capexSummary: westCapexSummary,
-  capexMeta: westCapexMeta,
+  capexKpi: westCapexKpi,
   opexSummary: westOpexSummary,
   opexMeta: westOpexMeta,
   issueList: westIssueList,

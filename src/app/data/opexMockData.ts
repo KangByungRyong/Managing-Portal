@@ -204,31 +204,41 @@ const westRawData: WestRawData[] = [
 ];
 
 /**
- * 누적 실적을 1~3월에 분산하는 헬퍼
- * cum4Actual = m1 + m2 + m3 + aprActual
- * 1~3월은 비율 [0.28, 0.35, 0.37] 로 분산 (실제 집행 패턴 반영)
+ * 누적 4월 실적을 1~4월에 자연스럽게 분산하는 헬퍼
+ * - cum4Actual: 4개월 누적 실적 합계
+ * - seed: 계정별 미세 변동 시드 (계정마다 다른 패턴 부여)
+ * - 월별 비율은 [0.23, 0.25, 0.26, 0.26] 기준으로 seed 기반 미세 조정
+ *   → 월별 실적이 비슷한 규모로 분산되어 라인 차트가 자연스럽게 표현됨
  */
 function distributeMonthly(
   annualPlan: number,
-  aprActual: number,
+  _aprActual: number, // 원본 데이터 보존용 (미사용)
   cum4Actual: number,
   seed: number,
 ): MonthlyRecord[] {
   const monthlyPlan = Math.round(annualPlan / 12);
 
-  // 1~3월 실적 분산 (cum4 - apr)
-  const cum3Actual = cum4Actual - Math.abs(aprActual);
-  const ratios     = [0.28, 0.35, 0.37];
-  // 미세 시드 변동
-  const s = (seed % 10) / 100;
-  const adj = [ratios[0] + s, ratios[1] - s * 0.5, ratios[2] - s * 0.5];
+  // seed 기반 미세 변동 (±2% 수준)
+  const s = ((Math.abs(seed) * 13) % 17) / 1_000;
+  const raw = [0.23 + s, 0.25 - s * 0.5, 0.26 + s * 0.3, 0.26 + s * 0.2];
+  const rSum = raw.reduce((a, b) => a + b, 0);
+  const ratios = raw.map((r) => r / rSum); // 합계 = 1.0 보정
 
-  return [
-    { month: 1, plan: monthlyPlan, actual: Math.round(cum3Actual * adj[0]) },
-    { month: 2, plan: monthlyPlan, actual: Math.round(cum3Actual * adj[1]) },
-    { month: 3, plan: monthlyPlan, actual: Math.round(cum3Actual * adj[2]) },
-    { month: 4, plan: Math.round(annualPlan / 12), actual: Math.abs(aprActual) },
-  ];
+  // 1~3월 먼저 확정, 4월은 나머지로 채워 누적 합계를 cum4Actual에 맞춤
+  let remaining = cum4Actual;
+  const actuals: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    const v = Math.round(cum4Actual * ratios[i]);
+    actuals.push(v);
+    remaining -= v;
+  }
+  actuals.push(Math.max(0, remaining)); // month 4
+
+  return [1, 2, 3, 4].map((month, i) => ({
+    month,
+    plan:   monthlyPlan,
+    actual: Math.max(0, actuals[i]),
+  }));
 }
 
 // ── 서부 AccountData 생성 ─────────────────────────────────────────────────────
@@ -618,4 +628,60 @@ export const CATEGORY_COLORS: Record<AccountCategory, string> = {
   기타:    "#6b7280",
   매출:    "#1a7a4a",
   EBITDA:  "#ef4444",
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// 팀별 데이터 (OpEx 탭 연동)
+// ═════════════════════════════════════════════════════════════════════════════
+
+export type OpexTeam =
+  | "중부안전/구축팀"
+  | "중부유선/설비팀"
+  | "충남Access운용팀"
+  | "충북Access운용팀"
+  | "서부안전/구축팀"
+  | "서부유선/설비팀"
+  | "전남Access운용팀"
+  | "전북Access운용팀"
+  | "제주Access운용팀";
+
+export const OPEX_HQ_TEAMS: Record<Region, OpexTeam[]> = {
+  central: ["중부안전/구축팀", "중부유선/설비팀", "충남Access운용팀", "충북Access운용팀"],
+  west:    ["서부안전/구축팀", "서부유선/설비팀", "전남Access운용팀", "전북Access운용팀", "제주Access운용팀"],
+};
+
+/** 팀별 예산 비중 (합계 = 1.0) */
+const TEAM_RATIOS: Record<OpexTeam, number> = {
+  "중부안전/구축팀":   0.38,
+  "중부유선/설비팀":   0.28,
+  "충남Access운용팀":  0.22,
+  "충북Access운용팀":  0.12,
+  "서부안전/구축팀":   0.32,
+  "서부유선/설비팀":   0.25,
+  "전남Access운용팀":  0.28,
+  "전북Access운용팀":  0.10,
+  "제주Access운용팀":  0.05,
+};
+
+/**
+ * 특정 팀의 RegionalOpexData 반환
+ * team = null 이면 지역 전체 반환
+ */
+export const getOpexDataByTeam = (
+  region: Region,
+  team: OpexTeam | null,
+  month = 4,
+): RegionalOpexData => {
+  if (!team) return getOpexDataByMonth(region, month);
+  const base  = region === "central" ? centralAccountData : westAccountData;
+  const ratio = TEAM_RATIOS[team];
+  const scaledData: AccountData[] = base.map((d) => ({
+    ...d,
+    monthly: d.monthly.map((m) => ({
+      ...m,
+      plan:   Math.round(m.plan   * ratio),
+      actual: Math.round(m.actual * ratio),
+    })),
+  }));
+  return buildRegionalOpex(region, scaledData, month);
 };

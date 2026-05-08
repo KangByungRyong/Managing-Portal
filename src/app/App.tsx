@@ -16,6 +16,8 @@ import { HomePage } from "./pages/HomePage";
 import { SecurityPage } from "./pages/SecurityPage";
 import { StabilityPage } from "./pages/StabilityPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { OpexPage } from "./pages/OpexPage";
+import { CapexPage } from "./pages/CapexPage";
 
 export default function App() {
   const [region, setRegion] = useState<"central" | "west">(
@@ -256,6 +258,24 @@ export default function App() {
           <div className="flex-1 overflow-y-auto">
             <StabilityPage region={region} />
           </div>
+        </div>
+      );
+    }
+
+    // 지표 > OpEx
+    if (level1 === "metrics" && level2 === "opex") {
+      return (
+        <div className="flex-1 overflow-y-auto">
+          <OpexPage region={region} />
+        </div>
+      );
+    }
+
+    // 지표 > CapEx
+    if (level1 === "metrics" && level2 === "capex") {
+      return (
+        <div className="flex-1 overflow-y-auto">
+          <CapexPage region={region} />
         </div>
       );
     }
