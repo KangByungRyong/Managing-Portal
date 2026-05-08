@@ -1,0 +1,10 @@
+/* theme.css 또는 globals.css에 추가 */
+
+html {
+  font-size: 16px;   /* 브라우저 기본값 유지 (보통 이게 작게 느껴지는 원인) */
+}
+
+body {
+  font-size: 1rem;   /* = 16px */
+  line-height: 1.6;  /* 줄간격도 넉넉하게 */
+}

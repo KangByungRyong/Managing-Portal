@@ -306,7 +306,7 @@ export function InventoryPage({ region }: InventoryPageProps) {
           <div className="relative flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 28, right: 72, bottom: 28, left: 72 }}>
-                <Pie data={conditionPieData} dataKey="value" nameKey="name" innerRadius={88} outerRadius={144} label={renderPieLabel} labelLine={false}>
+                <Pie data={conditionPieData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} label={renderPieLabel} labelLine={false}>
                   {conditionPieData.map((entry, idx) => (
                     <Cell key={entry.name} fill={CONDITION_COLORS[idx % CONDITION_COLORS.length]} />
                   ))}

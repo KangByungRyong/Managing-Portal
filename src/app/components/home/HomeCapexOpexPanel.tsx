@@ -12,7 +12,7 @@ function BudgetBar({ label, budget, actual, rate }: BudgetBarProps) {
   const rateColor = rate >= 50 ? "#1a7a4a" : rate >= 35 ? "#f59e0b" : "#9ca3af";
   return (
     <div className="flex flex-col gap-0.5">
-      <div className="flex items-center justify-between text-[10px]">
+      <div className="flex items-center justify-between text-base">
         <span className="text-gray-600">{label}</span>
         <span className="font-semibold tabular-nums" style={{ color: rateColor }}>
           {rate}%

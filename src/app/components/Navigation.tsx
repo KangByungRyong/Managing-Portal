@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
+import { ChevronDown, Workflow } from "lucide-react";
 import {
   navigationConfig,
   NavigationState,
   TabLevel1,
 } from "../types/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface NavigationProps {
   state: NavigationState;
@@ -17,6 +24,7 @@ export function Navigation({
   onNavExpand,
 }: NavigationProps) {
   const [isLevel2Visible, setIsLevel2Visible] = useState(false);
+  const networkTools = ["NSR", "LM 대시보드", "중부ATDT포털"] as const;
   const level1Tabs = Object.keys(
     navigationConfig,
   ) as TabLevel1[];
@@ -36,7 +44,7 @@ export function Navigation({
       onMouseLeave={() => setIsLevel2Visible(false)}
     >
       {/* 1차 탭 - 항상 표시 */}
-      <div className="flex bg-white px-6 border-b border-gray-300 shadow-sm">
+      <div className="flex items-center bg-white px-6 border-b border-gray-300 shadow-sm gap-1">
         {level1Tabs.map((tab) => {
           const config = navigationConfig[tab];
           const isActive = state.level1 === tab;
@@ -76,6 +84,34 @@ export function Navigation({
             </button>
           );
         })}
+
+        <div className="ml-auto py-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-[var(--region-primary)] hover:bg-[var(--region-light)] hover:text-[var(--region-primary)]"
+              >
+                <Workflow className="size-4" />
+                <span>Network 도구</span>
+                <ChevronDown className="size-4 text-slate-500" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="min-w-[180px] border-slate-200"
+            >
+              {networkTools.map((tool) => (
+                <DropdownMenuItem
+                  key={tool}
+                  className="cursor-pointer px-3 py-2 text-sm font-medium text-slate-700"
+                >
+                  {tool}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* 2차 탭 - 호버 시에만 표시 */}

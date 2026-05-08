@@ -39,6 +39,34 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --font-size-base: 15px; 
+}
+
+/* ── 기본 타이포그래피 ── */
+html,
+body {
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 테이블 셀 기본 크기 보정 */
+table {
+  font-size: 0.9375rem; /* 15px */
+}
+
+/* KPI 숫자 강조 */
+.kpi-value {
+  font-size: 1.75rem;   /* 28px */
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* 탭 네비게이션 */
+.tab-label {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
 }
 
 .dark {
@@ -185,6 +213,7 @@
 
   html {
     font-size: var(--font-size);
+    font-size: var(--font-size-base);
   }
 
   h1 {
