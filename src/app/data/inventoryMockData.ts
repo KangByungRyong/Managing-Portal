@@ -589,7 +589,71 @@ export interface RegionalInventoryData {
     byMonth:          Record<number, number>;
     byMaterialType:   Record<MaterialType, { count: number; totalQty: number }>;
   };
+  monthlyData: Array<{ 
+    month: number; 
+    currentQty: number | null;      // 1-5월만 값, 6-12월은 null
+    consumedQty: number | null;     // 1-5월만 값, 6-12월은 null
+    goalQty: number;                // 목표 수량 (1-12월 모두)
+    refHqGoalQty: number;           // 본사 목표 수량 (1-12월 모두)
+    refHqCurrentQty: number | null; // 본사 현재 수량 (1-5월만 값)
+  }>
 }
+
+const buildMonthlyData = (region: Region): RegionalInventoryData['monthlyData'] => {
+  const data: RegionalInventoryData['monthlyData'] = [];
+  
+  // 지역별 기본 수량
+  const baseGoalCentral = 10000;
+  const baseCurrentCentral = 8500;
+  const baseGoalWest = 15000;
+  const baseCurrentWest = 12000;
+  
+  // 본사(HQ) 기본 수량 (참고용)
+  const baseGoalHq = 20000;
+  const baseCurrentHq = 18000;
+  
+  const baseGoal = region === 'central' ? baseGoalCentral : baseGoalWest;
+  const baseCurrent = region === 'central' ? baseCurrentCentral : baseCurrentWest;
+  
+  // 12개월 모두 생성, 하지만 1-5월만 실제 데이터 (current, consumed)
+  for (let month = 1; month <= 12; month++) {
+    // 목표 수량: 월별 150개씩 감소 (1-12월 모두)
+    const goal = Math.floor(baseGoal - (month - 1) * 150);
+    
+    // 현재 수량: 1-5월만 값, 6-12월은 null
+    let currentQty: number | null = null;
+    if (month <= 5) {
+      const variance = Math.sin((month - 1) * Math.PI / 6) * 300 + (Math.random() * 200 - 100);
+      currentQty = Math.max(Math.floor(baseCurrent - (month - 1) * 140 + variance), 4000);
+    }
+    
+    // 소비량: 1-5월만 값, 6-12월은 null
+    let consumedQty: number | null = null;
+    if (month <= 5) {
+      consumedQty = Math.max(Math.floor(500 + Math.random() * 400), 300);
+    }
+    
+    // 본사(HQ) Reference 데이터
+    const hqGoal = Math.floor(baseGoalHq - (month - 1) * 300);
+    
+    // 본사 현재 수량: 1-5월만 값, 6-12월은 null
+    let refHqCurrentQty: number | null = null;
+    if (month <= 5) {
+      const hqVariance = Math.sin((month - 1) * Math.PI / 6) * 500 + (Math.random() * 300 - 150);
+      refHqCurrentQty = Math.max(Math.floor(baseCurrentHq - (month - 1) * 250 + hqVariance), 8000);
+    }
+    
+    data.push({
+      month,
+      currentQty,
+      consumedQty,
+      goalQty: Math.max(goal, 6000),
+      refHqGoalQty: Math.max(hqGoal, 10000),
+      refHqCurrentQty,
+    });
+  }
+  return data;
+};
 
 const buildRegionalInventory = (region: Region): RegionalInventoryData => {
   const list = getInventoryList(region);
@@ -605,6 +669,7 @@ const buildRegionalInventory = (region: Region): RegionalInventoryData => {
       byMonth:         countByMonth(list),
       byMaterialType:  aggregateByMaterialType(list),
     },
+    monthlyData: buildMonthlyData(region),
   };
 };
 

@@ -645,9 +645,18 @@ export interface OpexSummaryItem {
 }
 
 export interface OpexMeta {
+  baseMonth: number;
   totalBudget: number;
   totalActual: number;
   totalRate: number;
+  monthPlan: number;
+  monthActual: number;
+  monthRate: number;
+  salesMonthPlan: number;
+  salesMonthActual: number;
+  salesMonthRate: number;
+  ebitdaMonthPlan: number;
+  ebitdaMonthActual: number;
   baseDate: string;
 }
 
@@ -659,9 +668,18 @@ const centralOpexSummary: OpexSummaryItem[] = [
   { label: "기타 운용비", budget:  29, actual: 13, rate: 44.8 },
 ];
 const centralOpexMeta: OpexMeta = {
+  baseMonth: 4,
   totalBudget: 350,
   totalActual: 169,
   totalRate: 48.3,
+  monthPlan: 50,
+  monthActual: 43.2,
+  monthRate: 86.4,
+  salesMonthPlan: 55,
+  salesMonthActual: 58.7,
+  salesMonthRate: 106.7,
+  ebitdaMonthPlan: 12,
+  ebitdaMonthActual: 15.5,
   baseDate: "2026.05.06 기준",
 };
 
@@ -673,9 +691,18 @@ const westOpexSummary: OpexSummaryItem[] = [
   { label: "기타 운용비", budget:  16, actual:  5, rate: 31.3 },
 ];
 const westOpexMeta: OpexMeta = {
+  baseMonth: 4,
   totalBudget: 220,
   totalActual:  90,
   totalRate: 40.9,
+  monthPlan: 28,
+  monthActual: 22.5,
+  monthRate: 80.4,
+  salesMonthPlan: 31.8,
+  salesMonthActual: 34.1,
+  salesMonthRate: 107.2,
+  ebitdaMonthPlan: 7.5,
+  ebitdaMonthActual: 8.7,
   baseDate: "2026.05.06 기준",
 };
 

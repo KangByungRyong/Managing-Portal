@@ -115,98 +115,99 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
   }, [region]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col gap-2 h-full">
+    <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col gap-2 h-full overflow-hidden">
       {/* 헤더 */}
       <div className="shrink-0 flex items-center gap-1.5">
         <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-        <span className="text-xs font-bold text-gray-700">
+        <span className="text-base font-bold text-gray-700">
           {region === "central" ? "중부 본부" : "서부 본부"} 시군구별 품질 현황
         </span>
-        <span className="text-[10px] text-gray-400 ml-1">Quality by District</span>
+        <span className="text-xs text-gray-500 ml-1">Quality by District</span>
       </div>
 
-      {/* 지도 + 우측 패널 (side-by-side) - flex-1로 나머지 높이 차지 */}
-      <div className="flex-1 min-h-0 flex gap-3">
-        {/* 지도: h-full로 부모 높이 채움 */}
-        <div ref={mapContainer} className="flex-1 min-h-0 rounded-lg border border-gray-200 min-w-0" style={{ minHeight: 180 }} />
+      {/* Worst 5 목록 — 상단 고정 */}
+      <div className="shrink-0">
+        <p className="text-xs font-semibold text-gray-500 mb-1">Worst 5 지역</p>
 
-        {/* 우측: 범례 + 선택 정보 + Worst 5 목록 */}
-        <div className="w-44 shrink-0 flex flex-col gap-2 overflow-y-auto">
-          {/* 범례 */}
-          <div>
-            <p className="text-[10px] font-semibold text-gray-500 mb-1">1등급 비율 기준</p>
-            <div className="flex flex-col gap-0.5 text-[10px]">
-              {[
-                { color: "#1a7a4a", label: "85%+" },
-                { color: "#16a34a", label: "80 ~ 85%" },
-                { color: "#22c55e", label: "75 ~ 80%" },
-                { color: "#84cc16", label: "70 ~ 75%" },
-                { color: "#fbbf24", label: "70% 이하" },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-gray-600">{label}</span>
-                </div>
-              ))}
+        {/* 선택된 지역 상세 */}
+        {selectedDistrict && (
+          <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 mb-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-gray-700 truncate">{selectedDistrict.name}</span>
+              <button
+                onClick={() => setSelectedDistrict(null)}
+                className="text-gray-400 hover:text-gray-600 ml-1 shrink-0 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex gap-3 text-xs">
+              <div className="flex justify-between gap-1">
+                <span className="text-gray-500">1등급</span>
+                <span className="font-bold text-gray-800">{selectedDistrict.grade1stRate}%</span>
+              </div>
+              <div className="flex justify-between gap-1">
+                <span className="text-gray-500">4등급↓</span>
+                <span className="font-bold text-red-600">{selectedDistrict.grade4thRate}%</span>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* 선택된 지역 상세 */}
-          {selectedDistrict && (
-            <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-semibold text-gray-700 truncate">{selectedDistrict.name}</span>
-                <button
-                  onClick={() => setSelectedDistrict(null)}
-                  className="text-gray-400 hover:text-gray-600 ml-1 shrink-0 text-xs"
-                >
-                  ✕
-                </button>
+        <div className="grid grid-cols-5 gap-1">
+          {worstDistricts.map((district, idx) => (
+            <div
+              key={district.id}
+              onClick={() => {
+                setSelectedDistrict(district);
+                onSelectWorstDistrict?.(district, idx + 1);
+                panToDistrict(district);
+              }}
+              className={`p-1.5 rounded cursor-pointer transition-colors text-xs ${
+                selectedDistrict?.id === district.id
+                  ? "bg-blue-50 border border-blue-200"
+                  : "bg-gray-50 hover:bg-gray-100"
+              }`}
+            >
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="text-[10px] font-bold text-red-500">{idx + 1}</span>
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: district.color }} />
+                <span className="text-gray-700 font-medium truncate text-[10px]">{district.name}</span>
               </div>
-              <div className="flex flex-col gap-0.5 text-[10px]">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">1등급</span>
-                  <span className="font-bold text-gray-800">{selectedDistrict.grade1stRate}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">4등급↓</span>
-                  <span className="font-bold text-red-600">{selectedDistrict.grade4thRate}%</span>
-                </div>
+              <div className="text-right">
+                <span className="text-red-600 tabular-nums font-semibold text-[11px]">
+                  {district.grade1stRate}%
+                </span>
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
 
-          {/* Worst 5 목록 */}
-          <div>
-            <p className="text-[10px] font-semibold text-gray-500 mb-1">Worst 5 지역</p>
-            <div className="flex flex-col gap-0.5">
-              {worstDistricts.map((district, idx) => (
-                <div
-                  key={district.id}
-                  onClick={() => {
-                    setSelectedDistrict(district);
-                    onSelectWorstDistrict?.(district, idx + 1);
-                    panToDistrict(district);
-                  }}
-                  className={`p-1.5 rounded cursor-pointer transition-colors text-[10px] ${
-                    selectedDistrict?.id === district.id
-                      ? "bg-blue-50 border border-blue-200"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[9px] font-bold text-red-500 w-3 shrink-0">{idx + 1}</span>
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: district.color }} />
-                      <span className="text-gray-700 font-medium truncate">{district.name}</span>
-                    </div>
-                    <span className="text-red-600 tabular-nums font-semibold ml-1 shrink-0">
-                      {district.grade1stRate}%
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* Map — 남은 높이 모두 차지 */}
+      <div className="flex-1 min-h-0 relative">
+        <div
+          ref={mapContainer}
+          className="h-full w-full rounded-lg border border-gray-200"
+          style={{ minHeight: 140 }}
+        />
+
+        {/* Map 내 우측 하단 Legend */}
+        <div className="absolute bottom-2 right-2 z-10 rounded-md border border-gray-200 bg-white/95 px-2 py-1.5 shadow-sm backdrop-blur-sm">
+          <p className="text-xs font-semibold text-gray-500 mb-1">1등급 비율 기준</p>
+          <div className="flex flex-col gap-0.5 text-xs">
+            {[
+              { color: "#1a7a4a", label: "85%+" },
+              { color: "#16a34a", label: "80 ~ 85%" },
+              { color: "#22c55e", label: "75 ~ 80%" },
+              { color: "#84cc16", label: "70 ~ 75%" },
+              { color: "#fbbf24", label: "70% 이하" },
+            ].map(({ color, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: color }} />
+                <span className="text-gray-600">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -52,16 +52,16 @@ function KpiChartPair({ title, metric }: KpiChartPairProps) {
     <div className="rounded-xl border border-gray-100 bg-gray-50 p-3.5">
       <div className="flex items-center gap-1.5 mb-3">
         <div className="w-0.5 h-3.5 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-        <span className="text-xs font-bold text-gray-700">{title}</span>
+        <span className="text-sm font-bold text-gray-700">{title}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[9px] text-gray-400 mb-1 font-medium">{title} (day)</p>
+          <p className="text-xs text-gray-400 mb-1 font-medium">{title} (day)</p>
           {chartProps(dayData)}
         </div>
         <div>
-          <p className="text-[9px] text-gray-400 mb-1 font-medium">{title} (hour)</p>
+          <p className="text-xs text-gray-400 mb-1 font-medium">{title} (hour)</p>
           {chartProps(hourData)}
         </div>
       </div>
@@ -96,8 +96,8 @@ export function StationKpiSidebar({ isOpen, onClose, kpiData, region }: StationK
           }}
         >
           <div className="min-w-0">
-            <h2 className="text-base font-bold text-gray-900">기지국 성능 통계</h2>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">
+            <h2 className="text-lg font-bold text-gray-900">기지국 성능 통계</h2>
+            <p className="text-sm text-gray-500 mt-0.5 truncate">
               {kpiData ? `${kpiData.targetName} · Base Station KPI Statistics` : "대상을 선택하세요"}
             </p>
           </div>
@@ -108,10 +108,10 @@ export function StationKpiSidebar({ isOpen, onClose, kpiData, region }: StationK
 
         <div className="p-5 overflow-y-auto h-[calc(100%-73px)]">
           {!kpiData ? (
-            <div className="text-sm text-gray-400 mt-8 text-center">선택된 항목이 없습니다.</div>
+            <div className="text-base text-gray-400 mt-8 text-center">선택된 항목이 없습니다.</div>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-400 px-1">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 px-1">
                 <span>{`5G ${regionLabel} 기준`}</span>
                 <span>일별 {kpiData.meta.dayRange}</span>
                 <span>시간별 {kpiData.meta.hourRange}</span>

@@ -1,5 +1,5 @@
 // src/app/components/home/HomeCapexOpexPanel.tsx
-import { CapexKpi, OpexSummaryItem } from "../../data/homeMockData";
+import { CapexKpi, OpexMeta, OpexSummaryItem } from "../../data/homeMockData";
 
 interface BudgetBarProps {
   label: string;
@@ -12,7 +12,7 @@ function BudgetBar({ label, budget, actual, rate }: BudgetBarProps) {
   const rateColor = rate >= 50 ? "#1a7a4a" : rate >= 35 ? "#f59e0b" : "#9ca3af";
   return (
     <div className="flex flex-col gap-0.5">
-      <div className="flex items-center justify-between text-base">
+      <div className="flex items-center justify-between text-lg">
         <span className="text-gray-600">{label}</span>
         <span className="font-semibold tabular-nums" style={{ color: rateColor }}>
           {rate}%
@@ -25,7 +25,7 @@ function BudgetBar({ label, budget, actual, rate }: BudgetBarProps) {
             style={{ width: `${rate}%`, backgroundColor: rateColor }}
           />
         </div>
-        <span className="text-[9px] text-gray-400 tabular-nums w-16 text-right">
+        <span className="text-xs text-gray-400 tabular-nums w-16 text-right">
           {actual}/{budget}억
         </span>
       </div>
@@ -58,26 +58,26 @@ export function BudgetPanel({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-0.5 h-3.5 rounded" style={{ backgroundColor: accentColor }} />
-          <span className="text-[11px] font-bold text-gray-700">{title}</span>
-          <span className="text-[9px] text-gray-400">{subtitle}</span>
-          {onNavigate && <span className="ml-1 text-[8px] text-gray-300">▶</span>}
+          <span className="text-[15px] font-bold text-gray-700">{title}</span>
+          <span className="text-[10px] text-gray-400">{subtitle}</span>
+          {onNavigate && <span className="ml-1 text-[10px] text-gray-300">▶</span>}
         </div>
-        <span className="text-[9px] text-gray-400">{baseDate}</span>
+        <span className="text-[10px] text-gray-400">{baseDate}</span>
       </div>
 
       {/* 총계 */}
       <div className="flex items-center gap-2 bg-gray-50 rounded-md px-2 py-1.5">
         <div>
-          <p className="text-[8px] text-gray-400">총 예산</p>
-          <p className="text-sm font-bold text-gray-800 font-mono">{totalBudget}억</p>
+          <p className="text-[10px] text-gray-400">종 예산</p>
+          <p className="text-base font-bold text-gray-800 font-mono">{totalBudget}억</p>
         </div>
         <div>
-          <p className="text-[8px] text-gray-400">집행액</p>
-          <p className="text-sm font-bold text-gray-800 font-mono">{totalActual}억</p>
+          <p className="text-[10px] text-gray-400">집행액</p>
+          <p className="text-base font-bold text-gray-800 font-mono">{totalActual}억</p>
         </div>
         <div className="ml-auto text-right">
-          <p className="text-[8px] text-gray-400">집행률</p>
-          <p className="text-base font-bold font-mono" style={{ color: accentColor }}>
+          <p className="text-[10px] text-gray-400">집행률</p>
+          <p className="text-lg font-bold font-mono" style={{ color: accentColor }}>
             {totalRate}%
           </p>
         </div>
@@ -102,13 +102,10 @@ interface HomeCapexKpiPanelProps {
 }
 
 const fmtM = (v: number) => v.toLocaleString();
+const CAPEX_BORDER = ["#3b82f6", "#06b6d4", "#1a7a4a", "#f59e0b"];
 
 export function HomeCapexKpiPanel({ data, onNavigate }: HomeCapexKpiPanelProps) {
   const accentColor = "var(--region-primary)";
-  const soakBadge = data.soakRate >= 35 ? { label: "목표 달성", color: "#1a7a4a" } : { label: "목표 미달", color: "#f59e0b" };
-  const completeBadge = data.completionRate >= 40
-    ? { color: "#1a7a4a" } : data.completionRate >= 25
-    ? { color: "#f59e0b" } : { color: "#ef4444" };
 
   const kpiItems = [
     {
@@ -116,7 +113,6 @@ export function HomeCapexKpiPanel({ data, onNavigate }: HomeCapexKpiPanelProps) 
       value: `${fmtM(data.totalConfirmM)}`,
       unit: "백만원",
       sub: `AFE ${data.approvedAfeCount}차 기준`,
-      badge: null as null | { label: string; color: string },
       color: "#374151",
     },
     {
@@ -124,7 +120,6 @@ export function HomeCapexKpiPanel({ data, onNavigate }: HomeCapexKpiPanelProps) 
       value: `${fmtM(data.totalExecutionM)}`,
       unit: "백만원",
       sub: `당월 ${fmtM(data.curMonthExecM)}M · 잔여 ${fmtM(data.totalConfirmM - data.totalExecutionM)}M`,
-      badge: null as null | { label: string; color: string },
       color: "#374151",
     },
     {
@@ -132,16 +127,14 @@ export function HomeCapexKpiPanel({ data, onNavigate }: HomeCapexKpiPanelProps) 
       value: `${data.soakRate.toFixed(1)}`,
       unit: "%",
       sub: `당월 ${fmtM(data.curMonthExecM)}M`,
-      badge: soakBadge,
-      color: soakBadge.color,
+      color: data.soakRate >= 50 ? "#1a7a4a" : data.soakRate >= 35 ? "#f59e0b" : "#9ca3af",
     },
     {
       label: "공사 완료율",
       value: `${data.completionRate.toFixed(1)}`,
       unit: "%",
       sub: `당월 개통 ${data.curMonthCompletion}건`,
-      badge: { label: `${data.completionDone}건 / ${data.completionTotal}건`, color: completeBadge.color },
-      color: completeBadge.color,
+      color: data.completionRate >= 40 ? "#1a7a4a" : data.completionRate >= 25 ? "#f59e0b" : "#ef4444",
     },
   ];
 
@@ -154,33 +147,105 @@ export function HomeCapexKpiPanel({ data, onNavigate }: HomeCapexKpiPanelProps) 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <div className="w-0.5 h-3.5 rounded" style={{ backgroundColor: accentColor }} />
-          <span className="text-[11px] font-bold text-gray-700">CapEx 집행</span>
-          <span className="text-[9px] text-gray-400">Capital Expenditure</span>
-          {onNavigate && <span className="ml-1 text-[8px] text-gray-300">▶</span>}
+          <span className="text-[15px] font-bold text-gray-700">CapEx 집행</span>
+          <span className="text-[10px] text-gray-400">Capital Expenditure</span>
+          {onNavigate && <span className="ml-1 text-[10px] text-gray-300">▶</span>}
         </div>
-        <span className="text-[9px] text-gray-400">{data.baseDate}</span>
+        <span className="text-[10px] text-gray-400">{data.baseDate}</span>
       </div>
 
-      {/* KPI 2×2 그리드 */}
-      <div className="grid grid-cols-2 gap-1.5">
-        {kpiItems.map((item) => (
-          <div key={item.label} className="bg-gray-50 rounded-md px-2 py-1.5 flex flex-col gap-0.5">
-            <span className="text-[9px] text-gray-400 leading-none">{item.label}</span>
+      {/* KPI 1줄 그리드 */}
+      <div className="grid grid-cols-4 gap-1.5">
+        {kpiItems.map((item, idx) => (
+          <div key={item.label} className="bg-gray-50 rounded-md px-2 py-1.5 flex flex-col gap-0.5 border-l-[3px]" style={{ borderLeftColor: CAPEX_BORDER[idx % CAPEX_BORDER.length] }}>
+            <span className="text-[13px] text-gray-600">{item.label}</span>
             <div className="flex items-baseline gap-0.5">
-              <span className="text-[15px] font-bold tabular-nums leading-none" style={{ color: item.color }}>
+              <span className="text-base font-semibold" style={{ color: item.color }}>
                 {item.value}
               </span>
-              <span className="text-[9px] text-gray-400 leading-none">{item.unit}</span>
-              {item.badge && (
-                <span
-                  className="ml-auto text-[8px] font-semibold px-1 py-0.5 rounded-full leading-none"
-                  style={{ color: item.badge.color, backgroundColor: `${item.badge.color}18` }}
-                >
-                  {item.badge.label}
-                </span>
-              )}
+              <span className="text-[10px] text-gray-400">{item.unit}</span>
             </div>
-            <span className="text-[9px] text-gray-400 leading-none truncate">{item.sub}</span>
+            <span className="text-[10px] text-gray-400 truncate">{item.sub}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface HomeOpexKpiPanelProps {
+  data: OpexMeta;
+  onNavigate?: () => void;
+}
+
+const fmtOk = (value: number) => value.toFixed(1);
+const getRateColor = (rate: number) => {
+  if (rate < 90) return "#ef4444";
+  if (rate > 110) return "#f59e0b";
+  return "#1a7a4a";
+};
+const OPEX_BORDER = ["#7c3aed", "#3b82f6", "#1a7a4a", "#f59e0b"];
+
+export function HomeOpexKpiPanel({ data, onNavigate }: HomeOpexKpiPanelProps) {
+  const accentColor = "#7c3aed";
+
+  const kpiItems = [
+    {
+      label: `당월 집행금액 (${data.baseMonth}월)`,
+      value: fmtOk(data.monthActual),
+      unit: "억원",
+      sub: `계획 ${fmtOk(data.monthPlan)}억원`,
+      color: "#374151",
+    },
+    {
+      label: "누적 집행금액",
+      value: fmtOk(data.totalActual),
+      unit: "억원",
+      sub: `연간예산 ${fmtOk(data.totalBudget)}억원`,
+      color: "#374151",
+    },
+    {
+      label: `당월 매출 (${data.baseMonth}월)`,
+      value: fmtOk(data.salesMonthActual),
+      unit: "억원",
+      sub: `계획 ${fmtOk(data.salesMonthPlan)}억원`,
+      color: "#374151",
+    },
+    {
+      label: `당월 EBITDA (${data.baseMonth}월)`,
+      value: fmtOk(data.ebitdaMonthActual),
+      unit: "억원",
+      sub: `계획 ${fmtOk(data.ebitdaMonthPlan)}억원`,
+      color: data.ebitdaMonthActual >= data.ebitdaMonthPlan ? "#1a7a4a" : "#f59e0b",
+    },
+  ];
+
+  return (
+    <div
+      className={`bg-white rounded-lg shadow-sm p-2 flex flex-col gap-1.5 ${onNavigate ? "cursor-pointer hover:shadow-md hover:ring-1 hover:ring-blue-200 transition-shadow" : ""}`}
+      onClick={onNavigate}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <div className="w-0.5 h-3.5 rounded" style={{ backgroundColor: accentColor }} />
+          <span className="text-[15px] font-bold text-gray-700">OpEx 집행</span>
+          <span className="text-[10px] text-gray-400">Operating Expenditure</span>
+          {onNavigate && <span className="ml-1 text-[10px] text-gray-300">▶</span>}
+        </div>
+        <span className="text-[10px] text-gray-400">{data.baseDate}</span>
+      </div>
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {kpiItems.map((item, idx) => (
+          <div key={item.label} className="bg-gray-50 rounded-md px-2 py-1.5 flex flex-col gap-0.5 border-l-[3px]" style={{ borderLeftColor: OPEX_BORDER[idx % OPEX_BORDER.length] }}>
+            <span className="text-[13px] text-gray-600">{item.label}</span>
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-base font-semibold" style={{ color: item.color }}>
+                {item.value}
+              </span>
+              <span className="text-[10px] text-gray-400">{item.unit}</span>
+            </div>
+            <span className="text-[10px] text-gray-400 truncate">{item.sub}</span>
           </div>
         ))}
       </div>

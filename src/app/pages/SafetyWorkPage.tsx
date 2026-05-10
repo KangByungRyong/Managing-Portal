@@ -1,6 +1,8 @@
 // src/app/pages/SafetyWorkPage.tsx
 import { useState, useMemo } from "react";
+import { useAppStore } from "../stores/appStore";
 import { ChevronUp, ChevronDown, Moon, Shield } from "lucide-react";
+import { Pie, PieChart, Cell, ResponsiveContainer } from "recharts";
 import { KpiCard } from "../components/KpiCard";
 import { ColumnFilterDropdown } from "../components/ColumnFilterDropdown";
 import {
@@ -13,10 +15,6 @@ import {
   WorkTeam,
   SafetyCode,
 } from "../data/safetyWorkData";
-
-interface SafetyWorkPageProps {
-  region: HqDivision;
-}
 
 // ── 안전코드 뱃지 색상 ──
 const SAFETY_CODE_STYLE: Record<SafetyCode, string> = {
@@ -162,36 +160,44 @@ function DonutSplitCard({
   rightColor: string;
 }) {
   const total = leftValue + rightValue;
-  const leftDeg = total > 0 ? (leftValue / total) * 360 : 0;
+  const chartData = [
+    { name: leftLabel, value: leftValue, color: leftColor },
+    { name: rightLabel, value: rightValue, color: rightColor },
+  ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="px-3.5 pt-3.5 pb-2 border-b">
-        <span className="text-xs font-bold text-gray-700">{title}</span>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-3 pt-3 pb-1.5 border-b">
+        <span className="text-[13px] font-bold text-gray-700">{title}</span>
       </div>
-      <div className="p-3 flex items-center gap-3">
-        <div
-          className="w-[76px] h-[76px] rounded-full relative shrink-0"
-          style={{
-            background: `conic-gradient(${leftColor} 0deg ${leftDeg}deg, ${rightColor} ${leftDeg}deg 360deg)`,
-          }}
-        >
-          <div className="absolute inset-[13px] bg-white rounded-full flex items-center justify-center">
-            <span className="text-[11px] font-mono font-bold text-gray-700">{total}</span>
+      <div className="p-2.5 flex flex-col gap-2 min-w-0">
+        <div className="relative w-full h-[260px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} strokeWidth={2}>
+                {chartData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[13px] font-mono font-bold text-gray-700">{total}</span>
           </div>
         </div>
-        <div className="flex-1 space-y-1.5 text-xs">
+
+        <div className="w-full space-y-1 text-[11px]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: leftColor }} />
-              <span className="text-gray-600">{leftLabel}</span>
+              <span className="text-gray-600 truncate">{leftLabel}</span>
             </div>
             <span className="font-mono font-semibold text-gray-800">{leftValue}</span>
           </div>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: rightColor }} />
-              <span className="text-gray-600">{rightLabel}</span>
+              <span className="text-gray-600 truncate">{rightLabel}</span>
             </div>
             <span className="font-mono font-semibold text-gray-800">{rightValue}</span>
           </div>
@@ -469,7 +475,8 @@ function WorkDetailSidebar({
   );
 }
 
-export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
+export function SafetyWorkPage() {
+  const { region } = useAppStore();
   const [selectedTeam, setSelectedTeam] = useState<WorkTeam | null>(null);
   const [filterStatuses, setFilterStatuses] = useState<WorkStatus[]>([]);
   const [filterCategories, setFilterCategories] = useState<WorkCategory[]>([]);
@@ -865,7 +872,7 @@ export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
         {/* 주간 작업 현황 (도넛 3종) */}
         <div className="col-span-2 bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-3.5 pt-3.5 pb-2 border-b">
-            <span className="text-xs font-bold text-gray-700">
+            <span className="text-[13px] font-bold text-gray-700">
               {hqLabel} 주간 작업 현황
             </span>
           </div>
@@ -900,7 +907,7 @@ export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
           </div>
 
           <div className="px-3.5 pt-2 pb-1 border-t border-gray-100">
-            <span className="text-xs font-bold text-gray-700">팀별 주간 현황</span>
+            <span className="text-[13px] font-bold text-gray-700">팀별 주간 현황</span>
           </div>
           <div className="px-3.5 pb-3">
             <div className="overflow-x-auto">
@@ -950,7 +957,7 @@ export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
           {/* 분류별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden flex-1">
             <div className="px-3.5 pt-3.5 pb-2 border-b">
-              <span className="text-xs font-bold text-gray-700">분류별 현황</span>
+              <span className="text-[13px] font-bold text-gray-700">분류별 현황</span>
             </div>
             <div className="p-3 space-y-2">
               {ALL_CATEGORIES.map((cat) => {
@@ -983,7 +990,7 @@ export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
           {/* 안전코드별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="px-3.5 pt-3.5 pb-2 border-b">
-              <span className="text-xs font-bold text-gray-700">안전코드별 현황</span>
+              <span className="text-[13px] font-bold text-gray-700">안전코드별 현황</span>
             </div>
             <div className="p-3 grid grid-cols-4 gap-2 border-b border-gray-100">
               {(["C1", "C2", "C3", "C4"] as SafetyCode[]).map((code) => (
@@ -1011,7 +1018,7 @@ export function SafetyWorkPage({ region }: SafetyWorkPageProps) {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {/* 테이블 헤더 */}
         <div className="px-3.5 pt-3.5 pb-2 border-b flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-xs font-bold text-gray-700">
+          <span className="text-[13px] font-bold text-gray-700">
             작업 목록
             <span className="ml-2 text-gray-400 font-normal">
               {filteredRows.length}건

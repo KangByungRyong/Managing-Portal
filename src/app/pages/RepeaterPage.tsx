@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { KpiCard } from "../components/KpiCard";
 import { ColumnFilterDropdown } from "../components/ColumnFilterDropdown";
@@ -24,15 +25,12 @@ import {
   getRepeaterKpi,
 } from "../data/facilityStatusData";
 
-interface RepeaterPageProps {
-  region: HqDivision;
-}
-
 function Num({ v, className = "" }: { v: number; className?: string }) {
   return <span className={className}>{v > 0 ? v.toLocaleString() : <span className="text-gray-300">-</span>}</span>;
 }
 
-export function RepeaterPage({ region }: RepeaterPageProps) {
+export function RepeaterPage() {
+  const { region } = useAppStore();
   const [selectedTeam, setSelectedTeam] = useState<AccessTeam | null>(null);
   const [isSiteKpiOpen, setIsSiteKpiOpen] = useState(false);
   const [isFiveGOpen, setIsFiveGOpen] = useState(false);

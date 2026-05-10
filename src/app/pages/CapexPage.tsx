@@ -1,5 +1,6 @@
 // src/app/pages/CapexPage.tsx
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import {
   ComposedChart,
   Line,
@@ -479,11 +480,8 @@ function AfeTableWithAccordion({ rows }: { rows: AfeTableRow[] }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 메인 페이지
 // ─────────────────────────────────────────────────────────────────────────────
-interface CapexPageProps {
-  region: HqDivision;
-}
-
-export function CapexPage({ region }: CapexPageProps) {
+export function CapexPage() {
+  const { region } = useAppStore();
   const regionKey = region === "central" ? "central" : "west";
   const regionStr = regionKey === "central" ? "중부" : "서부";
 

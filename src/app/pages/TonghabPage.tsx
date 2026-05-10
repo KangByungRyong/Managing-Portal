@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import { KpiCard } from "../components/KpiCard";
 import {
   HorizontalBarChart,
@@ -17,11 +18,8 @@ import {
   TonghabStation,
 } from "../data/tonghabMockData";
 
-interface TonghabPageProps {
-  region: "central" | "west";
-}
-
-export function TonghabPage({ region }: TonghabPageProps) {
+export function TonghabPage() {
+  const { region } = useAppStore();
   const [isListSidebarOpen, setIsListSidebarOpen] = useState(false);
   const [isDetailSidebarOpen, setIsDetailSidebarOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<TonghabStation | null>(null);

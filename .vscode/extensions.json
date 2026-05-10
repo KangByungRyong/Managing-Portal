@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    // ── React / TypeScript ─────────────────────────────────────────────────────
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+
+    // ── Tailwind CSS ──────────────────────────────────────────────────────────
+    "bradlc.vscode-tailwindcss",
+
+    // ── AI 어시스턴트 ──────────────────────────────────────────────────────────
+    "github.copilot",
+    "github.copilot-chat",
+
+    // ── Git ────────────────────────────────────────────────────────────────────
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // ── 유틸리티 ──────────────────────────────────────────────────────────────
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

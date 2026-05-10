@@ -1,0 +1,72 @@
+{
+  // ── 에디터 기본 설정 ─────────────────────────────────────────────────────────
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.rulers": [100],
+  "editor.wordWrap": "off",
+
+  // ── 저장 시 자동 처리 ────────────────────────────────────────────────────────
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // ── Prettier 설정 ────────────────────────────────────────────────────────────
+  "prettier.semi": true,
+  "prettier.singleQuote": false,
+  "prettier.trailingComma": "all",
+  "prettier.printWidth": 100,
+  "prettier.tabWidth": 2,
+
+  // ── TypeScript ───────────────────────────────────────────────────────────────
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ── Tailwind IntelliSense ────────────────────────────────────────────────────
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html"
+  },
+
+  // ── 파일 탐색기 제외 ─────────────────────────────────────────────────────────
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.pnpm-store": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/pnpm-lock.yaml": true
+  },
+
+  // ── 파일 연결 ────────────────────────────────────────────────────────────────
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  // ── Git ──────────────────────────────────────────────────────────────────────
+  "git.ignoreLimitWarning": true,
+
+  // ── 터미널 ───────────────────────────────────────────────────────────────────
+  "terminal.integrated.defaultProfile.osx": "zsh",
+
+  // ── Emmet ────────────────────────────────────────────────────────────────────
+  "emmet.includeLanguages": {
+    "typescriptreact": "html"
+  }
+}

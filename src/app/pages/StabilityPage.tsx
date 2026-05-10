@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import { ComposedChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { HqDivision } from "../data/facilityStatusData";
 import {
@@ -8,10 +9,6 @@ import {
   VOC_CONSULT_TYPES,
   VOC_LOCATION_CODES,
 } from "../data/stabilityMockData";
-
-interface StabilityPageProps {
-  region: HqDivision;
-}
 
 type PeriodType = "weekly" | "monthly";
 type RmStatusFilter = "all" | "처리" | "진행중";
@@ -39,7 +36,8 @@ function inRange(dateStr: string, start: Date, end: Date): boolean {
   return d >= start && d <= end;
 }
 
-export function StabilityPage({ region }: StabilityPageProps) {
+export function StabilityPage() {
+  const { region } = useAppStore();
   const regionKey = region === "central" ? "central" : "west";
   const data = getStabilityData(regionKey);
 
@@ -146,7 +144,7 @@ export function StabilityPage({ region }: StabilityPageProps) {
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white rounded-lg shadow-sm p-4 border-t-[3px]" style={{ borderTopColor: "var(--region-primary)" }}>
           <div className="text-xs text-gray-500">RM 현황</div>

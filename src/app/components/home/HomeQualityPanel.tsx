@@ -11,7 +11,7 @@ import {
 function CqBar({ label, value, color }: CqBarItem & { color: string }) {
   return (
     <div className="flex items-center gap-2 py-0.5">
-      <span className="text-xs text-gray-500 w-28 shrink-0 text-right leading-tight">
+      <span className="text-sm text-gray-500 w-28 shrink-0 text-right leading-tight">
         {label}
       </span>
       <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
@@ -62,8 +62,8 @@ function CqKpiCard({ title, label, snapshot, gradeKey, barColor, accentColor, on
       }
     >
       <div className="flex items-center gap-1.5">
-        <span className="text-base font-bold leading-snug" style={{ color: accentColor }}>{title}</span>
-        <span className="ml-auto text-[14px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">{label}</span>
+        <span className="text-[15px] font-bold leading-snug" style={{ color: accentColor }}>{title}</span>
+        <span className="ml-auto text-base text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">{label}</span>
       </div>
       <div className="flex flex-col gap-2">
         {items.map((item) => (
@@ -79,7 +79,7 @@ function EndcPie({ title, data }: { title: string; data: EndcSlice[] }) {
   const filtered = data.filter((d) => d.value > 0);
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 mb-1.5">{title}</p>
+      <p className="text-sm font-semibold text-gray-500 mb-1.5">{title}</p>
       <div className="flex items-center gap-2">
         {/* 파이 차트 */}
         <div style={{ width: 76, height: 76, flexShrink: 0 }}>
@@ -128,8 +128,8 @@ function EndcCard({ snapshot }: { snapshot: EndcSnapshot }) {
   return (
     <div className="bg-white rounded-lg shadow-sm px-3 pt-2.5 pb-3 flex flex-col gap-2 border-t-[3px] border-t-purple-500">
       <div className="flex items-center gap-1.5">
-        <span className="text-base font-bold text-purple-700 leading-snug">ENDC 시도호</span>
-        <span className="ml-auto text-[14px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">
+        <span className="text-[15px] font-bold text-purple-700 leading-snug">ENDC 시도호</span>
+        <span className="ml-auto text-base text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">
           {snapshot.dateLabel.split(" ")[0]}
         </span>
       </div>
@@ -172,35 +172,36 @@ export function HomeQualityPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 섹션 헤더 (날짜를 타이틀 우측에 표현) */}
-      <div className="flex items-center gap-1.5">
-        <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-        <span className="text-sm font-bold text-gray-700">품질 등급 요약</span>
-        <span className="text-[10px] text-gray-400 ml-1">
-          ({prevCq.dateLabel} / {todayCq.dateLabel} · 06시 이후)
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {qualityData.targets.map((target) => (
-          <button
-            key={target.id}
-            type="button"
-            onClick={() => setSelectedTarget(target.id)}
-            className={`px-2 py-1 rounded-full text-[10px] font-medium border transition-colors ${
-              resolvedTarget === target.id
-                ? "text-white border-transparent"
-                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-            }`}
-            style={resolvedTarget === target.id ? { backgroundColor: "var(--region-primary)" } : undefined}
-          >
-            {target.label}
-          </button>
-        ))}
+      {/* 섹션 헤더 + 필터 (같은 행에 배치) */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="w-0.5 h-4 rounded shrink-0" style={{ backgroundColor: "var(--region-primary)" }} />
+        <span className="text-base font-bold text-gray-700 shrink-0">품질 등급 요약</span>
+        {/* 필터 버튼 */}
+        <div className="flex flex-wrap gap-1 ml-1">
+          {qualityData.targets.map((target) => (
+            <button
+              key={target.id}
+              type="button"
+              onClick={() => setSelectedTarget(target.id)}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
+                resolvedTarget === target.id
+                  ? "text-white border-transparent"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              }`}
+              style={resolvedTarget === target.id ? { backgroundColor: "var(--region-primary)" } : undefined}
+            >
+              {target.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 전일 */}
       <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] font-semibold text-gray-500 pl-1">● 전일</p>
+        <div className="flex items-baseline gap-1.5 pl-1">
+          <p className="text-sm font-semibold text-gray-600">● 전일</p>
+          <span className="text-xs text-gray-500">({prevCq.dateLabel} 집계 기준)</span>
+        </div>
         <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr 1.5fr" }}>
           <CqKpiCard title="CQ 1등급" label="전일" snapshot={prevCq} gradeKey="grade1st"
             barColor="#1a7a4a" accentColor="#1a7a4a"
@@ -216,7 +217,10 @@ export function HomeQualityPanel({
 
       {/* 금일 */}
       <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] font-semibold text-gray-500 pl-1">● 금일</p>
+        <div className="flex items-baseline gap-1.5 pl-1">
+          <p className="text-sm font-semibold text-gray-600">● 금일</p>
+          <span className="text-xs text-gray-500">({todayCq.dateLabel} · 06시 이후 기준)</span>
+        </div>
         <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr 1.5fr" }}>
           <CqKpiCard title="CQ 1등급" label="금일" snapshot={todayCq} gradeKey="grade1st"
             barColor="#1a7a4a" accentColor="#1a7a4a"

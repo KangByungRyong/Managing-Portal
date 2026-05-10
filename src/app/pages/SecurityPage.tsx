@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import { Pie, PieChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Server, Cpu, PauseCircle, Wrench, Trash2 } from "lucide-react";
 import { HqDivision } from "../data/facilityStatusData";
@@ -7,14 +8,21 @@ import {
   getSecurityData,
 } from "../data/securityMockData";
 
-interface SecurityPageProps {
-  region: HqDivision;
-}
-
 const KPI_SINGLE_COLORS = {
   완료: "#2563eb",
   미완료: "#e5e7eb",
 };
+
+function ValueOnlyTooltip({ active, payload }: { active?: boolean; payload?: Array<{ value?: number }> }) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  const rawValue = payload[0]?.value ?? 0;
+  return (
+    <div className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-semibold text-gray-800 shadow-md">
+      {rawValue.toLocaleString()}
+    </div>
+  );
+}
 
 function SingleKpiDonut({
   title,
@@ -36,16 +44,26 @@ function SingleKpiDonut({
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-2.5">
-      <p className="text-[11px] font-semibold text-gray-600 truncate mb-1.5">{title}</p>
-      <div className="relative h-24">
+      <p className="text-[13px] font-semibold text-gray-600 truncate mb-1.5">{title}</p>
+      <div className="relative h-[115px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={chartData} dataKey="value" innerRadius={30} outerRadius={48} strokeWidth={2}>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              innerRadius={30}
+              outerRadius={48}
+              strokeWidth={2}
+            >
               {chartData.map((entry) => (
                 <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => [value.toLocaleString(), "대수"]} />
+            <Tooltip
+              content={<ValueOnlyTooltip />}
+              cursor={false}
+              wrapperStyle={{ zIndex: 20 }}
+            />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -53,7 +71,7 @@ function SingleKpiDonut({
           <span className="text-sm font-bold text-gray-800 tabular-nums">{rate.toFixed(1)}%</span>
         </div>
       </div>
-      <div className="text-[10px] text-gray-600 mt-1">
+      <div className="text-[12px] text-gray-600 mt-1">
         전월 대비
         <span className={`ml-1 font-semibold ${delta >= 0 ? "text-green-600" : "text-red-600"}`}>
           {delta >= 0 ? "+" : ""}{delta.toLocaleString()}대
@@ -71,7 +89,8 @@ const EQUIPMENT_ICON = {
   "폐기 장비 대수": Trash2,
 } as const;
 
-export function SecurityPage({ region }: SecurityPageProps) {
+export function SecurityPage() {
+  const { region } = useAppStore();
   const regionKey = region === "central" ? "central" : "west";
   const data = getSecurityData(regionKey);
 
@@ -162,7 +181,7 @@ export function SecurityPage({ region }: SecurityPageProps) {
       <div className="rounded-lg border border-gray-200 bg-white p-3">
         <div className="flex items-center gap-1.5 mb-3">
           <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-          <span className="text-sm font-bold text-gray-700">보안 현황 요약</span>
+          <span className="text-[15px] font-bold text-gray-700">보안 현황 요약</span>
           <span className="text-[10px] text-gray-400">Security KPI</span>
         </div>
         <div className="grid grid-cols-4 gap-2">
@@ -181,7 +200,7 @@ export function SecurityPage({ region }: SecurityPageProps) {
       <div className="rounded-lg border border-gray-200 bg-white p-3">
         <div className="flex items-center gap-1.5 mb-2">
           <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-          <span className="text-sm font-bold text-gray-700">장비 현황</span>
+          <span className="text-[15px] font-bold text-gray-700">장비 현황</span>
           {(() => {
             const total = data.equipmentStatus.find(e => e.label === "총 운용 장비 대수")?.count ?? 0;
             const active = data.equipmentStatus.find(e => e.label === "운용 장비 대수")?.count ?? 0;
@@ -200,9 +219,9 @@ export function SecurityPage({ region }: SecurityPageProps) {
               <div key={item.label} className="rounded-lg border border-gray-200 bg-gray-50 p-2.5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold text-gray-600">{item.label}</p>
+                    <p className="text-[13px] font-semibold text-gray-600">{item.label}</p>
                     <p className="text-xl font-bold text-gray-800 font-mono leading-tight mt-1">{item.count.toLocaleString()}<span className="text-xs font-medium text-gray-500 ml-1">대</span></p>
-                    <p className="text-[10px] text-gray-600 mt-1">
+                    <p className="text-[12px] text-gray-600 mt-1">
                       전월 대비
                       <span className={`ml-1 font-semibold ${item.delta >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {item.delta >= 0 ? "+" : ""}{item.delta.toLocaleString()}대
@@ -222,7 +241,7 @@ export function SecurityPage({ region }: SecurityPageProps) {
       <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col min-h-0 flex-1">
         <div className="flex items-center gap-1.5 mb-2">
           <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-          <span className="text-sm font-bold text-gray-700">주요 보안 과제 현황</span>
+          <span className="text-[15px] font-bold text-gray-700">주요 보안 과제 현황</span>
         </div>
         <p className="text-xs font-semibold text-gray-600 mb-2">총 {filteredTasks.length.toLocaleString()}건</p>
         <div className="overflow-auto border border-gray-200 rounded-md flex-1 min-h-0">

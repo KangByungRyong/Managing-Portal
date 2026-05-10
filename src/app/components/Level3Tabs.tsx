@@ -22,7 +22,7 @@ export function Level3Tabs({ tabs, activeTab, onChange }: Level3TabsProps) {
             key={tab.id}
             onClick={() => !tab.disabled && onChange(tab.id)}
             disabled={tab.disabled}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
               isActive
                 ? "text-white"
                 : tab.disabled

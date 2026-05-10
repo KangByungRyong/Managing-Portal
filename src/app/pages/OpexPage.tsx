@@ -1,5 +1,6 @@
 // src/app/pages/OpexPage.tsx
 import { useMemo, useState } from "react";
+import { useAppStore } from "../stores/appStore";
 import {
   ComposedChart,
   Line,
@@ -53,10 +54,6 @@ const toOk = (v: number) => (v / 100_000).toFixed(1);
 // ─────────────────────────────────────────────────────────────────────────────
 // 컴포넌트
 // ─────────────────────────────────────────────────────────────────────────────
-
-interface OpexPageProps {
-  region: HqDivision;
-}
 
 /** 월간 막대 + 누적 라인 복합 차트 */
 function ComboTrendChart({
@@ -372,7 +369,8 @@ function MergedAccordionTable({
 // 메인 페이지
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function OpexPage({ region }: OpexPageProps) {
+export function OpexPage() {
+  const { region } = useAppStore();
   const regionKey = region === "central" ? "central" : "west";
   const homeData  = getHomeData(regionKey);
   const { opexMeta } = homeData;

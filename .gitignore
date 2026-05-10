@@ -1,6 +1,9 @@
 node_modules/
 dist/
-.vscode/
+# .vscode/ 는 프로젝트 공유 설정(settings.json, extensions.json)을 포함하므로 추적함
+# 개인 설정만 아래에 명시적으로 제외
+.vscode/*.code-snippets
+.vscode/launch.json
 .DS_Store
 .env.local
 .env.*.local

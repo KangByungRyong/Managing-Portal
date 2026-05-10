@@ -5,32 +5,30 @@
 // 실제 API 연동 시 이 파일에서 fetch/useQuery 로 교체하세요.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
-import { HqDivision } from "../data/facilityStatusData";
+import { useNavigate } from "react-router";
+import { useAppStore } from "../stores/appStore";
 import { DistrictQualityItem, getHomeData, getStationKpi, cqTrendMeta } from "../data/homeMockData";
 import { getSecurityData } from "../data/securityMockData";
 import { getRmList } from "../data/stabilityMockData";
-import { NavigationState } from "../types/navigation";
 
 import { HomeQualityPanel } from "../components/home/HomeQualityPanel";
 import { QualityMapPanel } from "../components/home/QualityMapPanel";
 import { HomeTrendChart } from "../components/home/HomeTrendChart";
 import { HomeSafetyPanel } from "../components/home/HomeSafetyPanel";
+import { HomeSecurityPanel } from "../components/home/HomeSecurityPanel";
 import { HomeStabilityPanel } from "../components/home/HomeStabilityPanel";
-import { BudgetPanel, HomeCapexKpiPanel } from "../components/home/HomeCapexOpexPanel";
+import { HomeCapexKpiPanel, HomeOpexKpiPanel } from "../components/home/HomeCapexOpexPanel";
 import { HomeIssuePanel } from "../components/home/HomeIssuePanel";
 import { StationKpiSidebar } from "../components/home/StationKpiSidebar";
-
-interface HomePageProps {
-  region: HqDivision;
-  onNavigate?: (state: NavigationState) => void;
-}
 
 type HomeDrilldownSelection =
   | { type: "cq1st"; periodLabel: "전일" | "금일"; dateLabel: string }
   | { type: "cq4th"; periodLabel: "전일" | "금일"; dateLabel: string }
   | { type: "worst5"; district: DistrictQualityItem; rank: number };
 
-export function HomePage({ region, onNavigate }: HomePageProps) {
+export function HomePage() {
+  const { region } = useAppStore();
+  const navigate = useNavigate();
   const regionKey = region === "central" ? "central" : "west";
   const d = getHomeData(regionKey);
   const securityData = getSecurityData(regionKey);
@@ -69,14 +67,14 @@ export function HomePage({ region, onNavigate }: HomePageProps) {
     : null;
 
   return (
-    <div className="h-full min-h-[1080px]">
-      <div className="grid grid-cols-12 gap-2 p-2 h-full">
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-2">
         {/* ───────────────────────────────────────────────────────────────────
-            좌측 메인 영역 (8컬럼): 품질 정보 + 지도 + 트렌드
+            좌측 메인 영역 (나머지 공간): 품질 정보 + (지도 | 트렌드) 수평 배치
             ─────────────────────────────────────────────────────────────────── */}
-        <div className="col-span-8 flex flex-col gap-2 h-full min-h-0">
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
           {/* 품질 등급 요약 (CQ KPI + ENDC 파이) */}
-          <div className="shrink-0">
+          <div>
             <HomeQualityPanel
               qualityData={d.qualitySummary}
               onSelectCq1st={({ periodLabel, dateLabel }) =>
@@ -88,74 +86,73 @@ export function HomePage({ region, onNavigate }: HomePageProps) {
             />
           </div>
 
-          {/* 시군구별 품질 현황 Map - 나머지 높이를 차지 */}
-          <div className="flex-1 min-h-0">
-            <QualityMapPanel
-              region={regionKey}
-              onSelectWorstDistrict={(district, rank) =>
-                setSelection({ type: "worst5", district, rank })
-              }
-            />
-          </div>
+          {/* 하단: 시군구별 품질 현황 Map(좌) | CQ 트렌드 차트(우) — 수평 배치 */}
+          <div className="flex gap-2 h-[496px]">
+            {/* 좌: 시군구별 품질 현황 (Worst 5 상단 + Map 하단) */}
+            <div className="flex-1 min-w-0">
+              <QualityMapPanel
+                region={regionKey}
+                onSelectWorstDistrict={(district, rank) =>
+                  setSelection({ type: "worst5", district, rank })
+                }
+              />
+            </div>
 
-          {/* CQ 트렌드 차트 (일별/시간별) */}
-          <div className="shrink-0">
-            <HomeTrendChart
-              trendData={d.cqTrend}
-              dayRange={cqTrendMeta.dayRange}
-              hourRange={cqTrendMeta.hourRange}
-            />
+            {/* 우: CQ 품질 변화 추이 (일별 상단 + 시간별 하단) */}
+            <div className="flex-1 min-w-0">
+              <HomeTrendChart
+                trendData={d.cqTrend}
+                dayRange={cqTrendMeta.dayRange}
+                hourRange={cqTrendMeta.hourRange}
+              />
+            </div>
           </div>
         </div>
 
         {/* ───────────────────────────────────────────────────────────────────
-            우측 요약 영역 (4컬럼): 주요 지표 타이틀 + 5개 요약 패널
+            우측 요약 영역 (600px 고정): 주요 지표 타이틀 + 5개 요약 패널
             ─────────────────────────────────────────────────────────────────── */}
-        <div className="col-span-4 flex flex-col gap-2 h-full min-h-0">
+        <div className="w-[600px] shrink-0 flex flex-col gap-2">
           {/* 주요 지표 타이틀 */}
           <div className="flex items-center gap-1.5">
             <div className="w-0.5 h-4 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
-            <span className="text-sm font-bold text-gray-700">주요 지표</span>
+            <span className="text-base font-bold text-gray-700">주요 지표</span>
             <span className="text-[10px] text-gray-400 ml-1">Key Metrics</span>
           </div>
 
           {/* 안정 요약 */}
           <HomeStabilityPanel
             rmItems={rmList}
-            onNavigate={onNavigate ? () => onNavigate({ level1: "status", level2: "stability" }) : undefined}
+            onNavigate={() => navigate("/status/stability")}
           />
 
           {/* 안전 작업 요약 */}
           <HomeSafetyPanel
             data={d.safetySummary}
-            onNavigate={onNavigate ? () => onNavigate({ level1: "status", level2: "safety", level3: "work" }) : undefined}
-            securityItems={securityKpiItems}
-            onNavigateSecurity={onNavigate ? () => onNavigate({ level1: "status", level2: "safety", level3: "security" }) : undefined}
+            onNavigate={() => navigate("/status/safety/work")}
           />
 
           {/* CapEx 요약 — CapEx 페이지 KPI 4항목과 동일하게 표현 */}
           <HomeCapexKpiPanel
             data={d.capexKpi}
-            onNavigate={onNavigate ? () => onNavigate({ level1: "metrics", level2: "capex" }) : undefined}
+            onNavigate={() => navigate("/metrics/capex")}
           />
 
           {/* OpEx 요약 */}
-          <BudgetPanel
-            title="OpEx 집행"
-            subtitle="Operating Expenditure"
-            items={d.opexSummary}
-            totalBudget={d.opexMeta.totalBudget}
-            totalActual={d.opexMeta.totalActual}
-            totalRate={d.opexMeta.totalRate}
-            baseDate={d.opexMeta.baseDate}
-            accentColor="#7c3aed"
-            onNavigate={onNavigate ? () => onNavigate({ level1: "metrics", level2: "opex" }) : undefined}
+          <HomeOpexKpiPanel
+            data={d.opexMeta}
+            onNavigate={() => navigate("/metrics/opex")}
           />
 
-          {/* 이슈사항 - flex-1로 남은 높이 모두 차지, 내부에서 스크롤 */}
-          <div className="flex-1 min-h-0">
-            <HomeIssuePanel issues={d.issueList} />
-          </div>
+          {/* 보안 요약 */}
+          <HomeSecurityPanel
+            items={securityKpiItems}
+            serverTotal={securityData.serverTotal}
+            onNavigate={() => navigate("/status/safety/security")}
+          />
+
+          {/* 이슈사항 */}
+          <HomeIssuePanel issues={d.issueList} />
         </div>
       </div>
 

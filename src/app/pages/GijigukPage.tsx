@@ -1,5 +1,6 @@
 // src/app/pages/GijigukPage.tsx
 import { useState, useMemo } from "react";
+import { useAppStore } from "../stores/appStore";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { KpiCard } from "../components/KpiCard";  // ← 추가
 import { GijigukKpiSidebar } from "../components/GijigukKpiSidebar";
@@ -25,10 +26,6 @@ import {
   GijigukAbnormalSiteStatus,
 } from "../data/facilityStatusData";
 
-interface GijigukPageProps {
-  region: HqDivision;
-}
-
 function Num({ v, className = "" }: { v: number; className?: string }) {
   return (
     <span className={className}>
@@ -37,7 +34,8 @@ function Num({ v, className = "" }: { v: number; className?: string }) {
   );
 }
 
-export function GijigukPage({ region }: GijigukPageProps) {
+export function GijigukPage() {
+  const { region } = useAppStore();
   const [selectedTeam, setSelectedTeam] = useState<AccessTeam | null>(null);
   const [isSiteKpiOpen, setIsSiteKpiOpen] = useState(false);
   const [isFiveGKpiOpen, setIsFiveGKpiOpen] = useState(false);

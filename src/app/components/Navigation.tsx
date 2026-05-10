@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router";
 import { ChevronDown, Workflow } from "lucide-react";
 import {
   navigationConfig,
@@ -11,31 +12,57 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useAppStore } from "../stores/appStore";
 
-interface NavigationProps {
-  state: NavigationState;
-  onChange: (state: NavigationState) => void;
-  onNavExpand: (expanded: boolean) => void;
+// level1 키를 URL 첫 세그먼트로 변환
+const LEVEL1_TO_PATH: Record<string, string> = {
+  home: "/home",
+  status: "/status/facility/tonghab",
+  metrics: "/metrics/capex",
+  focus: "/focus",
+  task: "/task",
+};
+
+// URL로부터 활성 level1 / level2 키를 추론
+function parseActiveKeys(pathname: string): { level1: string; level2: string } {
+  const segs = pathname.replace(/^\//, "").split("/");
+  const level1 = segs[0] ?? "home";
+  const level2 = segs[1] ?? "";
+  return { level1, level2 };
 }
 
-export function Navigation({
-  state,
-  onChange,
-  onNavExpand,
-}: NavigationProps) {
+// level2 탭 클릭 시 이동할 경로 계산
+function buildLevel2Path(level1: string, level2: string): string {
+  const l1Config = (navigationConfig as any)[level1];
+  const l2Config = l1Config?.children?.[level2];
+  if (l2Config?.tabs) {
+    const firstTab = Object.keys(l2Config.tabs)[0];
+    return `/${level1}/${level2}/${firstTab}`;
+  }
+  return `/${level1}/${level2}`;
+}
+
+export function Navigation() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setIsNavExpanded } = useAppStore();
+
   const [isLevel2Visible, setIsLevel2Visible] = useState(false);
   const networkTools = ["NSR", "LM 대시보드", "중부ATDT포털"] as const;
-  const level1Tabs = Object.keys(
-    navigationConfig,
-  ) as TabLevel1[];
-  const level1Config = navigationConfig[state.level1];
-  const level2Tabs = level1Config.children
+
+  const { level1: activeLevel1, level2: activeLevel2 } = parseActiveKeys(
+    location.pathname,
+  );
+
+  const level1Tabs = Object.keys(navigationConfig) as TabLevel1[];
+  const level1Config = (navigationConfig as any)[activeLevel1] ?? navigationConfig.home;
+  const level2Tabs: string[] = level1Config.children
     ? Object.keys(level1Config.children)
     : [];
 
   useEffect(() => {
-    onNavExpand(isLevel2Visible && level2Tabs.length > 0);
-  }, [isLevel2Visible, level2Tabs.length, onNavExpand]);
+    setIsNavExpanded(isLevel2Visible && level2Tabs.length > 0);
+  }, [isLevel2Visible, level2Tabs.length, setIsNavExpanded]);
 
   return (
     <div
@@ -47,33 +74,12 @@ export function Navigation({
       <div className="flex items-center bg-white px-6 border-b border-gray-300 shadow-sm gap-1">
         {level1Tabs.map((tab) => {
           const config = navigationConfig[tab];
-          const isActive = state.level1 === tab;
+          const isActive = activeLevel1 === tab;
           return (
             <button
               key={tab}
-              onClick={() => {
-                const newState: NavigationState = {
-                  level1: tab,
-                };
-                // 자동으로 첫 번째 하위 탭 선택
-                if (config.children) {
-                  const firstChild = Object.keys(
-                    config.children,
-                  )[0];
-                  newState.level2 = firstChild;
-                  const childConfig = (config.children as any)[
-                    firstChild
-                  ];
-                  // 시설 현황인 경우 첫 번째 탭 선택
-                  if (childConfig.tabs) {
-                    newState.level3 = Object.keys(
-                      childConfig.tabs,
-                    )[0];
-                  }
-                }
-                onChange(newState);
-              }}
-              className={`px-5 py-3 text-sm font-medium transition-all border-b-[3px] ${
+              onClick={() => navigate(LEVEL1_TO_PATH[tab] ?? `/${tab}`)}
+              className={`px-5 py-3 text-base font-medium transition-all border-b-[3px] ${
                 isActive
                   ? "text-[var(--region-primary)] font-bold border-[var(--region-primary)]"
                   : "text-gray-500 border-transparent hover:text-gray-900"
@@ -90,7 +96,7 @@ export function Navigation({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-[var(--region-primary)] hover:bg-[var(--region-light)] hover:text-[var(--region-primary)]"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-base font-medium text-slate-700 transition-colors hover:border-[var(--region-primary)] hover:bg-[var(--region-light)] hover:text-[var(--region-primary)]"
               >
                 <Workflow className="size-4" />
                 <span>Network 도구</span>
@@ -104,7 +110,7 @@ export function Navigation({
               {networkTools.map((tool) => (
                 <DropdownMenuItem
                   key={tool}
-                  className="cursor-pointer px-3 py-2 text-sm font-medium text-slate-700"
+                  className="cursor-pointer px-3 py-2 text-base font-medium text-slate-700"
                 >
                   {tool}
                 </DropdownMenuItem>
@@ -126,24 +132,12 @@ export function Navigation({
         >
           {level2Tabs.map((tab) => {
             const config = (level1Config.children as any)[tab];
-            const isActive = state.level2 === tab;
+            const isActive = activeLevel2 === tab;
             return (
               <button
                 key={tab}
-                onClick={() => {
-                  const newState: NavigationState = {
-                    level1: state.level1,
-                    level2: tab,
-                  };
-                  // 시설 현황인 경우 첫 번째 탭 선택
-                  if (config.tabs) {
-                    newState.level3 = Object.keys(
-                      config.tabs,
-                    )[0];
-                  }
-                  onChange(newState);
-                }}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                onClick={() => navigate(buildLevel2Path(activeLevel1, tab))}
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition-all ${
                   isActive
                     ? "text-white font-bold"
                     : "border-transparent hover:bg-white"

@@ -1,11 +1,11 @@
 import { useMemo } from "react";
+import { useAppStore } from "../stores/appStore";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
-  LabelList,
+  ComposedChart,
   Legend,
+  Line,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -19,10 +19,6 @@ import {
   MaterialClass,
   RegionalInventoryData,
 } from "../data/inventoryMockData";
-
-interface InventoryPageProps {
-  region: HqDivision;
-}
 
 type KpiMetric = {
   key: "totalItems" | "newQty" | "oldQty" | "totalQty" | "holdingItems";
@@ -216,7 +212,8 @@ function DonutCenter({ total, unit }: { total: number; unit: string }) {
   );
 }
 
-export function InventoryPage({ region }: InventoryPageProps) {
+export function InventoryPage() {
+  const { region } = useAppStore();
   const regionKey = region === "central" ? "central" : "west";
   const data = getInventoryData(regionKey);
 
@@ -266,31 +263,8 @@ export function InventoryPage({ region }: InventoryPageProps) {
     return Object.entries(data.summary.byInboundType).map(([name, value]) => ({ name, value }));
   }, [data.summary.byInboundType]);
 
-  const companyBarData = useMemo(() => {
-    return Object.keys(data.summary.byCompany)
-      .map((company) => {
-        const companyList = data.list.filter((item) => item.companyName === company);
-        const newQty = companyList
-          .filter((item) => item.condition === "신품(양호)")
-          .reduce((sum, item) => sum + item.quantity, 0);
-        const oldQty = companyList
-          .filter((item) => item.condition !== "신품(양호)")
-          .reduce((sum, item) => sum + item.quantity, 0);
-        const totalQty = newQty + oldQty;
-
-        return {
-          company,
-          newQty,
-          oldQty,
-          totalQty,
-          ratioLabel: totalQty > 0 ? `신품 ${Math.round((newQty / totalQty) * 100)}% / 구품 ${Math.round((oldQty / totalQty) * 100)}%` : "신품 0% / 구품 0%",
-        };
-      })
-      .sort((a, b) => b.totalQty - a.totalQty);
-  }, [data.list, data.summary.byCompany]);
-
   return (
-    <div className="flex flex-col gap-3 h-full min-h-0">
+    <div className="flex flex-col gap-3">
       <div className="rounded-lg border border-gray-200 bg-white p-3">
         <SectionTitle title="자재 현황 요약" subtitle={`Inventory KPI · 누적 기준 (전월 대비 ${currentMonth}월 증감)`} />
         <div className="grid grid-cols-5 gap-2">
@@ -300,10 +274,84 @@ export function InventoryPage({ region }: InventoryPageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 auto-rows-fr">
-        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col min-h-0">
+      <div className="rounded-lg border border-gray-200 bg-white p-3">
+        <SectionTitle title="월별 자재 현황" subtitle="보유 수량 vs 목표 수량 vs 소비량" />
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={data.monthlyData} margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="month" 
+                type="number" 
+                domain={[0.5, 12.5]} 
+                tick={{ fontSize: 11 }} 
+                tickFormatter={(value) => {
+                  const months = ['', '1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+                  return months[value] || '';
+                }}
+                label={{ value: "월", position: "insideBottomRight", offset: -5 }} 
+              />
+              <YAxis tick={{ fontSize: 11 }} label={{ value: "수량(개)", angle: -90, position: "insideLeft" }} />
+              <Tooltip 
+                formatter={(value: any) => value ? `${value.toLocaleString()}개` : '-'}
+                labelFormatter={(label) => `${label}월`}
+                contentStyle={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "4px" }}
+              />
+              <Legend />
+              
+              {/* 현재 수량 라인 (1-5월만) */}
+              <Line 
+                type="monotone" 
+                dataKey="currentQty" 
+                stroke="#3b82f6" 
+                strokeWidth={2.5}
+                name="현재 수량"
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              
+              {/* 목표 수량 라인 (점선) */}
+              <Line 
+                type="monotone" 
+                dataKey="goalQty" 
+                stroke="#10b981" 
+                strokeWidth={2.5}
+                strokeDasharray="5 5"
+                name="목표 수량"
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+              
+              {/* 본사 목표 수량 (1-12월 모두) */}
+              <Line 
+                type="monotone" 
+                dataKey="refHqGoalQty" 
+                stroke="#a78bfa" 
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                name="본사 목표 수량"
+                dot={false}
+              />
+              
+              {/* 본사 현재 수량 (1-5월만) */}
+              <Line 
+                type="monotone" 
+                dataKey="refHqCurrentQty" 
+                stroke="#f59e0b" 
+                strokeWidth={2}
+                name="본사 현재 수량"
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 h-96">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col">
           <SectionTitle title="신품/구품 비율" subtitle="수량 기준" />
-          <div className="relative flex-1 min-h-0">
+          <div className="relative h-72 flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 28, right: 72, bottom: 28, left: 72 }}>
                 <Pie data={conditionPieData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} label={renderPieLabel} labelLine={false}>
@@ -318,12 +366,12 @@ export function InventoryPage({ region }: InventoryPageProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col min-h-0">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col">
           <SectionTitle title="항목별 재고 현황" subtitle="자재 분류별 수량" />
-          <div className="relative flex-1 min-h-0">
+          <div className="relative h-72 flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 28, right: 72, bottom: 28, left: 72 }}>
-                <Pie data={classPieData} dataKey="value" nameKey="name" innerRadius={88} outerRadius={144} label={renderClassPieLabel} labelLine={false}>
+                <Pie data={classPieData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} label={renderClassPieLabel} labelLine={false}>
                   {classPieData.map((entry, idx) => (
                     <Cell key={entry.name} fill={DONUT_COLORS[idx % DONUT_COLORS.length]} />
                   ))}
@@ -333,13 +381,11 @@ export function InventoryPage({ region }: InventoryPageProps) {
             </ResponsiveContainer>
             <DonutCenter total={classTotalQty} unit="개" />
             {classSmallItems.length > 0 && (
-              <div className="absolute bottom-2 right-2 border border-gray-200 bg-white/90 rounded px-2.5 py-1.5 flex flex-col gap-1">
+              <div className="absolute bottom-0.5 right-0.5 border border-gray-200 bg-white/90 rounded px-2.5 py-1.5 flex flex-col gap-1">
                 {classSmallItems.map((item) => (
                   <div key={item.name} className="flex items-center gap-1.5">
-                    <svg width="28" height="12">
-                      <line x1="0" y1="6" x2="20" y2="6" stroke="#9ca3af" strokeWidth="1" />
-                      <circle cx="20" cy="6" r="1.5" fill="#9ca3af" />
-                      <rect x="22" y="3" width="6" height="6" rx="1" fill={DONUT_COLORS[item.idx % DONUT_COLORS.length]} />
+                    <svg width="12" height="12">
+                      <rect x="0" y="3" width="12" height="6" rx="1" fill={DONUT_COLORS[item.idx % DONUT_COLORS.length]} />
                     </svg>
                     <span style={{ fontSize: 13, color: "#374151" }}>
                       {item.name} {classTotalQty > 0 ? ((item.value / classTotalQty) * 100).toFixed(1) : 0}% ({item.value.toLocaleString()}개)
@@ -351,12 +397,12 @@ export function InventoryPage({ region }: InventoryPageProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col min-h-0">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col">
           <SectionTitle title="입고 데이터 분석" subtitle="입고 구분별 건수" />
-          <div className="relative flex-1 min-h-0">
+          <div className="relative h-72 flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 28, right: 72, bottom: 28, left: 72 }}>
-                <Pie data={inboundPieData} dataKey="value" nameKey="name" innerRadius={88} outerRadius={144} label={renderPieLabel} labelLine={false}>
+                <Pie data={inboundPieData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} label={renderPieLabel} labelLine={false}>
                   {inboundPieData.map((entry, idx) => (
                     <Cell key={entry.name} fill={DONUT_COLORS[idx % DONUT_COLORS.length]} />
                   ))}
@@ -365,31 +411,6 @@ export function InventoryPage({ region }: InventoryPageProps) {
               </PieChart>
             </ResponsiveContainer>
             <DonutCenter total={inboundPieData.reduce((sum, item) => sum + item.value, 0)} unit="건" />
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col min-h-0">
-          <SectionTitle title="업체별 재고 현황" subtitle="신품/구품 비율 포함" />
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={companyBarData} margin={{ top: 30, right: 12, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="company" tick={{ fontSize: 11 }} interval={0} angle={-18} textAnchor="end" height={56} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value.toLocaleString()}개`,
-                    name === "newQty" ? "신품" : "구품",
-                  ]}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Legend formatter={(value) => (value === "newQty" ? "신품" : "구품")} />
-                <Bar dataKey="newQty" stackId="qty" fill={CONDITION_COLORS[0]} radius={[4, 4, 0, 0]}>
-                  <LabelList dataKey="ratioLabel" position="top" offset={14} style={{ fontSize: 14, fill: "#6b7280" }} />
-                </Bar>
-                <Bar dataKey="oldQty" stackId="qty" fill={CONDITION_COLORS[1]} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         </div>
       </div>
