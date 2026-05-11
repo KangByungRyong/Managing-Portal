@@ -42,8 +42,22 @@ function KpiChartPair({ title, metric }: KpiChartPairProps) {
         />
         <Tooltip contentStyle={{ fontSize: 10 }} formatter={(v: number) => [`${v}${unit}`]} />
         <Legend wrapperStyle={{ fontSize: 9 }} iconType="plainline" iconSize={12} />
-        <Line type="monotone" dataKey="공동망" stroke="#f97316" strokeWidth={1.5} dot={false} activeDot={{ r: 2 }} />
-        <Line type="monotone" dataKey="단독망" stroke="#3b82f6" strokeWidth={1.5} dot={false} activeDot={{ r: 2 }} />
+        <Line
+          type="monotone"
+          dataKey="공동망"
+          stroke="#f97316"
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 2 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="단독망"
+          stroke="#3b82f6"
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 2 }}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -84,7 +98,7 @@ export function StationKpiSidebar({ isOpen, onClose, kpiData, region }: StationK
       {isOpen && <div className="fixed inset-0 bg-black/30 z-[340]" onClick={onClose} />}
 
       <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-[90%] lg:w-[58%] xl:w-[50%] bg-white shadow-2xl z-[341] transform transition-transform duration-500 ${
+        className={`fixed right-0 top-0 h-full w-[40%] bg-white shadow-2xl z-[341] transform transition-transform duration-500 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -98,10 +112,15 @@ export function StationKpiSidebar({ isOpen, onClose, kpiData, region }: StationK
           <div className="min-w-0">
             <h2 className="text-lg font-bold text-gray-900">기지국 성능 통계</h2>
             <p className="text-sm text-gray-500 mt-0.5 truncate">
-              {kpiData ? `${kpiData.targetName} · Base Station KPI Statistics` : "대상을 선택하세요"}
+              {kpiData
+                ? `${kpiData.targetName} · Base Station KPI Statistics`
+                : "대상을 선택하세요"}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/50 transition-colors"
+          >
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>

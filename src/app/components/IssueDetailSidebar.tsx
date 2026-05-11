@@ -24,15 +24,15 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
     item?.severity === "심각"
       ? "bg-rose-50 text-rose-600 border-rose-200"
       : item?.severity === "경계"
-      ? "bg-amber-50 text-amber-600 border-amber-200"
-      : "bg-blue-50 text-blue-600 border-blue-200";
+        ? "bg-amber-50 text-amber-600 border-amber-200"
+        : "bg-blue-50 text-blue-600 border-blue-200";
 
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-black/30 z-[340]" onClick={onClose} />}
 
       <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-[86%] lg:w-[52%] xl:w-[42%] bg-white shadow-2xl z-[341] transform transition-transform duration-500 ${
+        className={`fixed right-0 top-0 h-full w-[40%] bg-white shadow-2xl z-[341] transform transition-transform duration-500 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -47,7 +47,10 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
             <h2 className="text-lg font-bold text-gray-900">{title}</h2>
             <p className="text-xs text-gray-500 mt-0.5 truncate">선택 항목 상세</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/50 transition-colors"
+          >
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -60,7 +63,9 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
               <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-base font-bold text-gray-800">{item.siteName}</h3>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${severityClass}`}>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full border ${severityClass}`}
+                  >
                     {item.severity}
                   </span>
                 </div>
@@ -92,7 +97,10 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
                     <span className="text-xs text-gray-400">이슈 정보 없음</span>
                   )}
                   {item.abnormalCategories.map((issue) => (
-                    <span key={issue} className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700">
+                    <span
+                      key={issue}
+                      className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700"
+                    >
                       {issue}
                     </span>
                   ))}
@@ -106,7 +114,10 @@ export function IssueDetailSidebar({ isOpen, onClose, title, item }: IssueDetail
                     <span className="text-xs text-gray-400">장비 정보 없음</span>
                   )}
                   {item.equipmentNames?.map((equipName) => (
-                    <span key={equipName} className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700">
+                    <span
+                      key={equipName}
+                      className="text-[11px] px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-700"
+                    >
                       {equipName}
                     </span>
                   ))}

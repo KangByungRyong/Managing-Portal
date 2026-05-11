@@ -43,14 +43,16 @@ const CATEGORY_STYLE: Record<WorkCategory, string> = {
   B2B: "bg-indigo-50 text-indigo-700 border-indigo-300",
 };
 
+const IMPACT_LEVEL_STYLE: Record<1 | 2 | 3 | 4, string> = {
+  1: "bg-sky-50 text-sky-700 border-sky-300",
+  2: "bg-orange-50 text-orange-700 border-orange-300",
+  3: "bg-amber-50 text-amber-700 border-amber-300",
+  4: "bg-red-50 text-red-700 border-red-300",
+};
+
 // ── 팀 목록 (hq별) ──
 const HQ_TEAMS: Record<HqDivision, WorkTeam[]> = {
-  central: [
-    "중부안전/구축팀",
-    "중부유선/설비팀",
-    "충남Access운용팀",
-    "충북Access운용팀",
-  ],
+  central: ["중부안전/구축팀", "중부유선/설비팀", "충남Access운용팀", "충북Access운용팀"],
   west: [
     "서부안전/구축팀",
     "서부유선/설비팀",
@@ -69,22 +71,9 @@ const ALL_CATEGORIES: WorkCategory[] = [
   "B2B",
 ];
 
-const ALL_STATUSES: WorkStatus[] = [
-  "진행중",
-  "예정",
-  "완료",
-  "지연",
-  "취소",
-];
+const ALL_STATUSES: WorkStatus[] = ["진행중", "예정", "완료", "지연", "취소"];
 
-const CENTRAL_NEAR_CITIES = [
-  "대전",
-  "세종",
-  "계룡",
-  "공주",
-  "금산",
-  "논산",
-];
+const CENTRAL_NEAR_CITIES = ["대전", "세종", "계룡", "공주", "금산", "논산"];
 
 const CENTRAL_CHUNGBUK_ACCESS_NEAR_CITIES = [
   "보은",
@@ -98,15 +87,7 @@ const CENTRAL_CHUNGBUK_ACCESS_NEAR_CITIES = [
 
 const WEST_JEONBUK_ACCESS_NEAR_CITIES = ["전주시", "완주군", "전주", "완주"];
 
-const WEST_DEFAULT_NEAR_CITIES = [
-  "광주",
-  "나주",
-  "담양",
-  "영광",
-  "장성",
-  "함평",
-  "화순",
-];
+const WEST_DEFAULT_NEAR_CITIES = ["광주", "나주", "담양", "영광", "장성", "함평", "화순"];
 
 const OFFICE_NAME_KEYWORDS = [
   "둔산사옥",
@@ -126,13 +107,7 @@ type SortKey = keyof Pick<
 
 type KpiDrillType = "highRisk" | "night" | "remote" | "office";
 
-function Badge({
-  label,
-  className,
-}: {
-  label: string;
-  className: string;
-}) {
+function Badge({ label, className }: { label: string; className: string }) {
   return (
     <span
       className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-semibold whitespace-nowrap ${className}`}
@@ -168,13 +143,20 @@ function DonutSplitCard({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-3 pt-3 pb-1.5 border-b">
-        <span className="text-[13px] font-bold text-gray-700">{title}</span>
+        <span className="text-[15px] font-bold text-gray-700">{title}</span>
       </div>
       <div className="p-2.5 flex flex-col gap-2 min-w-0">
         <div className="relative w-full h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} strokeWidth={2}>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={70}
+                outerRadius={120}
+                strokeWidth={2}
+              >
                 {chartData.map((entry) => (
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
@@ -242,10 +224,7 @@ function KpiDrilldownSidebar({
           style={{ background: "var(--region-primary)" }}
         >
           <div className="text-white font-bold text-sm">{title} - 금일 작업</div>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white text-lg leading-none"
-          >
+          <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">
             ✕
           </button>
         </div>
@@ -258,12 +237,37 @@ function KpiDrilldownSidebar({
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10" style={{ backgroundColor: "var(--region-light)" }}>
               <tr className="border-b" style={{ borderColor: "var(--region-border)" }}>
-                <th className="px-2 py-2 text-left font-bold" style={{ color: "var(--region-primary)" }}>작업명</th>
-                <th className="px-2 py-2 text-left font-bold" style={{ color: "var(--region-primary)" }}>지역</th>
-                <th className="px-2 py-2 text-center font-bold" style={{ color: "var(--region-primary)" }}>분류</th>
-                <th className="px-2 py-2 text-left font-bold" style={{ color: "var(--region-primary)" }}>담당팀</th>
+                <th
+                  className="px-2 py-2 text-left font-bold"
+                  style={{ color: "var(--region-primary)" }}
+                >
+                  작업명
+                </th>
+                <th
+                  className="px-2 py-2 text-left font-bold"
+                  style={{ color: "var(--region-primary)" }}
+                >
+                  지역
+                </th>
+                <th
+                  className="px-2 py-2 text-center font-bold"
+                  style={{ color: "var(--region-primary)" }}
+                >
+                  분류
+                </th>
+                <th
+                  className="px-2 py-2 text-left font-bold"
+                  style={{ color: "var(--region-primary)" }}
+                >
+                  담당팀
+                </th>
                 {showDayNight && (
-                  <th className="px-2 py-2 text-center font-bold" style={{ color: "var(--region-primary)" }}>주/야간</th>
+                  <th
+                    className="px-2 py-2 text-center font-bold"
+                    style={{ color: "var(--region-primary)" }}
+                  >
+                    주/야간
+                  </th>
                 )}
               </tr>
             </thead>
@@ -285,11 +289,17 @@ function KpiDrilldownSidebar({
                   >
                     <td className="px-2 py-2 max-w-[260px]">
                       <div className="truncate text-gray-800 font-medium">{row.workName}</div>
-                      <div className="text-[10px] text-gray-400 font-mono truncate">{row.workId}</div>
+                      <div className="text-[10px] text-gray-400 font-mono truncate">
+                        {row.workId}
+                      </div>
                     </td>
-                    <td className="px-2 py-2 text-gray-600 whitespace-nowrap">{row.state} {row.city}</td>
+                    <td className="px-2 py-2 text-gray-600 whitespace-nowrap">
+                      {row.state} {row.city}
+                    </td>
                     <td className="px-2 py-2 text-center">
-                      <span className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-semibold ${CATEGORY_STYLE[row.category]}`}>
+                      <span
+                        className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-semibold ${CATEGORY_STYLE[row.category]}`}
+                      >
                         {row.category}
                       </span>
                     </td>
@@ -330,8 +340,7 @@ function WorkDetailSidebar({
 }) {
   if (!work) return null;
 
-  const formatDt = (dt: string) =>
-    dt.replace("T", " ").substring(0, 16);
+  const formatDt = (dt: string) => dt.replace("T", " ").substring(0, 16);
 
   return (
     <>
@@ -360,10 +369,7 @@ function WorkDetailSidebar({
             <Shield size={15} />
             작업 상세
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white text-lg leading-none"
-          >
+          <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">
             ✕
           </button>
         </div>
@@ -373,22 +379,15 @@ function WorkDetailSidebar({
           {/* 작업명 */}
           <div>
             <div className="text-xs text-gray-400 mb-0.5 font-medium">작업명</div>
-            <div className="font-semibold text-gray-900 leading-snug">
-              {work.workName}
-            </div>
-            <div className="text-xs text-gray-400 mt-0.5 font-mono">
-              {work.workId}
-            </div>
+            <div className="font-semibold text-gray-900 leading-snug">{work.workName}</div>
+            <div className="text-xs text-gray-400 mt-0.5 font-mono">{work.workId}</div>
           </div>
 
           {/* 상태 / 분류 / 안전코드 */}
           <div className="flex flex-wrap gap-1.5">
             <Badge label={work.status} className={STATUS_STYLE[work.status]} />
             <Badge label={work.category} className={CATEGORY_STYLE[work.category]} />
-            <Badge
-              label={work.safetyCode}
-              className={SAFETY_CODE_STYLE[work.safetyCode]}
-            />
+            <Badge label={work.safetyCode} className={SAFETY_CODE_STYLE[work.safetyCode]} />
             {work.isNightWork && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-slate-800 text-yellow-300 border-slate-700">
                 <Moon size={10} />
@@ -413,7 +412,9 @@ function WorkDetailSidebar({
           {/* 위치 */}
           <div className="bg-gray-50 rounded p-3 space-y-1">
             <div className="text-xs text-gray-400 font-medium mb-1">위치</div>
-            <div className="text-xs">{work.state} {work.city}</div>
+            <div className="text-xs">
+              {work.state} {work.city}
+            </div>
             <div className="text-xs text-gray-600">{work.location}</div>
           </div>
 
@@ -434,9 +435,7 @@ function WorkDetailSidebar({
               <span className="text-gray-500">영향도</span>
               <span
                 className={
-                  work.impactLevel === 2
-                    ? "text-orange-600 font-semibold"
-                    : "text-gray-700"
+                  work.impactLevel === 2 ? "text-orange-600 font-semibold" : "text-gray-700"
                 }
               >
                 Level {work.impactLevel}
@@ -498,9 +497,7 @@ export function SafetyWorkPage() {
   const kpi = getSafetyKpi(region, selectedTeam ?? undefined);
 
   const scopeRows = useMemo(() => {
-    return safetyWorks.filter(
-      (w) => w.hq === region && (!selectedTeam || w.team === selectedTeam),
-    );
+    return safetyWorks.filter((w) => w.hq === region && (!selectedTeam || w.team === selectedTeam));
   }, [region, selectedTeam]);
 
   const now = new Date();
@@ -524,9 +521,7 @@ export function SafetyWorkPage() {
 
     if (work.hq === "central") {
       if (work.team === "충북Access운용팀") {
-        return CENTRAL_CHUNGBUK_ACCESS_NEAR_CITIES.some((keyword) =>
-          cityText.includes(keyword),
-        );
+        return CENTRAL_CHUNGBUK_ACCESS_NEAR_CITIES.some((keyword) => cityText.includes(keyword));
       }
       return CENTRAL_NEAR_CITIES.some((keyword) => cityText.includes(keyword));
     }
@@ -535,9 +530,7 @@ export function SafetyWorkPage() {
     if (cityText.includes("제주")) return true;
 
     if (work.team === "전북Access운용팀") {
-      return WEST_JEONBUK_ACCESS_NEAR_CITIES.some((keyword) =>
-        cityText.includes(keyword),
-      );
+      return WEST_JEONBUK_ACCESS_NEAR_CITIES.some((keyword) => cityText.includes(keyword));
     }
 
     return WEST_DEFAULT_NEAR_CITIES.some((keyword) => cityText.includes(keyword));
@@ -595,10 +588,10 @@ export function SafetyWorkPage() {
     activeKpiDrill === "highRisk"
       ? "고위험 작업 현황"
       : activeKpiDrill === "night"
-      ? "야간 작업 현황"
-      : activeKpiDrill === "remote"
-      ? "원거리 작업 현황"
-      : "사옥 작업 현황";
+        ? "야간 작업 현황"
+        : activeKpiDrill === "remote"
+          ? "원거리 작업 현황"
+          : "사옥 작업 현황";
 
   const kpiDrillShowDayNight = activeKpiDrill !== "night";
 
@@ -629,9 +622,7 @@ export function SafetyWorkPage() {
   }, [region, selectedTeam, weekRows]);
 
   const tableBaseRows = useMemo(() => {
-    return safetyWorks.filter(
-      (w) => w.hq === region && (!selectedTeam || w.team === selectedTeam),
-    );
+    return safetyWorks.filter((w) => w.hq === region && (!selectedTeam || w.team === selectedTeam));
   }, [region, selectedTeam]);
 
   const uniqueTableTeams = useMemo(
@@ -655,10 +646,8 @@ export function SafetyWorkPage() {
   const filteredRows = useMemo(() => {
     let rows = safetyWorks.filter((w) => w.hq === region);
     if (selectedTeam) rows = rows.filter((w) => w.team === selectedTeam);
-    if (filterTeams.length > 0)
-      rows = rows.filter((w) => filterTeams.includes(w.team));
-    if (filterStatuses.length > 0)
-      rows = rows.filter((w) => filterStatuses.includes(w.status));
+    if (filterTeams.length > 0) rows = rows.filter((w) => filterTeams.includes(w.team));
+    if (filterStatuses.length > 0) rows = rows.filter((w) => filterStatuses.includes(w.status));
     if (filterCategories.length > 0)
       rows = rows.filter((w) => filterCategories.includes(w.category));
     if (filterSafetyCodes.length > 0)
@@ -673,8 +662,7 @@ export function SafetyWorkPage() {
         const distanceType = isRemoteWork(w) ? "원거리" : "근거리";
         return filterDistanceTypes.includes(distanceType);
       });
-    if (isTodayOnly)
-      rows = rows.filter((w) => w.startAt.slice(0, 10) === todayDateString);
+    if (isTodayOnly) rows = rows.filter((w) => w.startAt.slice(0, 10) === todayDateString);
     if (searchText.trim()) {
       const q = searchText.trim().toLowerCase();
       rows = rows.filter(
@@ -729,14 +717,10 @@ export function SafetyWorkPage() {
     );
 
   const toggleStatus = (s: WorkStatus) =>
-    setFilterStatuses((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
-    );
+    setFilterStatuses((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
   const toggleCategory = (c: WorkCategory) =>
-    setFilterCategories((prev) =>
-      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
-    );
+    setFilterCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
   const toggleTeam = (team: string) =>
     setFilterTeams((prev) =>
@@ -752,9 +736,7 @@ export function SafetyWorkPage() {
 
   const toggleNightType = (nightType: string) =>
     setFilterNightTypes((prev) =>
-      prev.includes(nightType)
-        ? prev.filter((x) => x !== nightType)
-        : [...prev, nightType],
+      prev.includes(nightType) ? prev.filter((x) => x !== nightType) : [...prev, nightType],
     );
 
   const toggleDistanceType = (distanceType: string) =>
@@ -872,9 +854,7 @@ export function SafetyWorkPage() {
         {/* 주간 작업 현황 (도넛 3종) */}
         <div className="col-span-2 bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-3.5 pt-3.5 pb-2 border-b">
-            <span className="text-[13px] font-bold text-gray-700">
-              {hqLabel} 주간 작업 현황
-            </span>
+            <span className="text-[15px] font-bold text-gray-700">{hqLabel} 주간 작업 현황</span>
           </div>
           <div className="p-3 grid grid-cols-3 gap-3">
             <DonutSplitCard
@@ -907,7 +887,7 @@ export function SafetyWorkPage() {
           </div>
 
           <div className="px-3.5 pt-2 pb-1 border-t border-gray-100">
-            <span className="text-[13px] font-bold text-gray-700">팀별 주간 현황</span>
+            <span className="text-[15px] font-bold text-gray-700">팀별 주간 현황</span>
           </div>
           <div className="px-3.5 pb-3">
             <div className="overflow-x-auto">
@@ -957,7 +937,7 @@ export function SafetyWorkPage() {
           {/* 분류별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden flex-1">
             <div className="px-3.5 pt-3.5 pb-2 border-b">
-              <span className="text-[13px] font-bold text-gray-700">분류별 현황</span>
+              <span className="text-[15px] font-bold text-gray-700">분류별 현황</span>
             </div>
             <div className="p-3 space-y-2">
               {ALL_CATEGORIES.map((cat) => {
@@ -967,9 +947,7 @@ export function SafetyWorkPage() {
                   <div key={cat}>
                     <div className="flex justify-between text-xs mb-0.5">
                       <span className="text-gray-600">{cat}</span>
-                      <span className="font-mono font-semibold text-gray-800">
-                        {count}건
-                      </span>
+                      <span className="font-mono font-semibold text-gray-800">{count}건</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
@@ -987,17 +965,36 @@ export function SafetyWorkPage() {
             </div>
           </div>
 
+          {/* 작업 Level별 */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="px-3.5 pt-3.5 pb-2 border-b">
+              <span className="text-[15px] font-bold text-gray-700">작업 Level별 현황</span>
+            </div>
+            <div className="p-3 grid grid-cols-4 gap-2 border-b border-gray-100">
+              {([1, 2, 3, 4] as const).map((level) => (
+                <div key={level} className="flex flex-col items-center gap-0.5">
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${IMPACT_LEVEL_STYLE[level]}`}
+                  >
+                    Level {level}
+                  </span>
+                  <span className="text-sm font-bold font-mono text-gray-800">
+                    {kpi.byImpact[level]}
+                  </span>
+                  <span className="text-[9px] text-gray-400">건</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* 안전코드별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="px-3.5 pt-3.5 pb-2 border-b">
-              <span className="text-[13px] font-bold text-gray-700">안전코드별 현황</span>
+              <span className="text-[15px] font-bold text-gray-700">안전코드별 현황</span>
             </div>
             <div className="p-3 grid grid-cols-4 gap-2 border-b border-gray-100">
               {(["C1", "C2", "C3", "C4"] as SafetyCode[]).map((code) => (
-                <div
-                  key={code}
-                  className="flex flex-col items-center gap-0.5"
-                >
+                <div key={code} className="flex flex-col items-center gap-0.5">
                   <span
                     className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${SAFETY_CODE_STYLE[code]}`}
                   >
@@ -1018,11 +1015,9 @@ export function SafetyWorkPage() {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {/* 테이블 헤더 */}
         <div className="px-3.5 pt-3.5 pb-2 border-b flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-[13px] font-bold text-gray-700">
+          <span className="text-[15px] font-bold text-gray-700">
             작업 목록
-            <span className="ml-2 text-gray-400 font-normal">
-              {filteredRows.length}건
-            </span>
+            <span className="ml-2 text-gray-400 font-normal">{filteredRows.length}건</span>
           </span>
           <div className="flex items-center gap-2 flex-wrap">
             {/* 검색 */}
@@ -1075,10 +1070,7 @@ export function SafetyWorkPage() {
           }`}
         >
           <table className="w-full text-xs">
-            <thead
-              className="z-10"
-              style={{ backgroundColor: "var(--region-light)" }}
-            >
+            <thead className="z-10" style={{ backgroundColor: "var(--region-light)" }}>
               <tr className="border-b" style={{ borderColor: "var(--region-border)" }}>
                 <th
                   className={`px-3 py-2 text-left text-xs font-bold whitespace-nowrap ${
@@ -1126,9 +1118,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "team"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "team" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "team" : null)}
                     />
                   </div>
                 </th>
@@ -1158,9 +1148,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "category"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "category" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "category" : null)}
                     />
                   </div>
                 </th>
@@ -1190,9 +1178,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "status"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "status" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "status" : null)}
                     />
                   </div>
                 </th>
@@ -1222,9 +1208,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "safetyCode"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "safetyCode" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "safetyCode" : null)}
                     />
                   </div>
                 </th>
@@ -1249,9 +1233,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "night"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "night" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "night" : null)}
                     />
                   </div>
                 </th>
@@ -1306,9 +1288,7 @@ export function SafetyWorkPage() {
                         setOpenDropdown(null);
                       }}
                       isOpen={openDropdown === "distance"}
-                      onOpenChange={(open) =>
-                        setOpenDropdown(open ? "distance" : null)
-                      }
+                      onOpenChange={(open) => setOpenDropdown(open ? "distance" : null)}
                     />
                   </div>
                 </th>
@@ -1317,10 +1297,7 @@ export function SafetyWorkPage() {
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={9}
-                    className="px-4 py-8 text-center text-gray-400"
-                  >
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                     해당 조건에 맞는 작업이 없습니다.
                   </td>
                 </tr>
@@ -1329,9 +1306,7 @@ export function SafetyWorkPage() {
                   <tr
                     key={row.workId}
                     className={`border-b last:border-0 cursor-pointer transition-colors ${
-                      idx % 2 === 0
-                        ? "bg-white hover:bg-blue-50"
-                        : "bg-gray-50/40 hover:bg-blue-50"
+                      idx % 2 === 0 ? "bg-white hover:bg-blue-50" : "bg-gray-50/40 hover:bg-blue-50"
                     }`}
                     onClick={() => {
                       setSelectedWork(row);
@@ -1349,45 +1324,29 @@ export function SafetyWorkPage() {
                           : {}
                       }
                     >
-                      <div className="truncate font-medium text-gray-800">
-                        {row.workName}
-                      </div>
+                      <div className="truncate font-medium text-gray-800">{row.workName}</div>
                       <div className="text-[9px] text-gray-400 font-mono truncate">
                         {row.workId}
                       </div>
                     </td>
                     {/* 팀 */}
-                    <td className="px-3 py-2 whitespace-nowrap text-gray-600">
-                      {row.team}
-                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-gray-600">{row.team}</td>
                     {/* 분류 */}
                     <td className="px-3 py-2 text-center">
-                      <Badge
-                        label={row.category}
-                        className={CATEGORY_STYLE[row.category]}
-                      />
+                      <Badge label={row.category} className={CATEGORY_STYLE[row.category]} />
                     </td>
                     {/* 상태 */}
                     <td className="px-3 py-2 text-center">
-                      <Badge
-                        label={row.status}
-                        className={STATUS_STYLE[row.status]}
-                      />
+                      <Badge label={row.status} className={STATUS_STYLE[row.status]} />
                     </td>
                     {/* 안전코드 */}
                     <td className="px-3 py-2 text-center">
-                      <Badge
-                        label={row.safetyCode}
-                        className={SAFETY_CODE_STYLE[row.safetyCode]}
-                      />
+                      <Badge label={row.safetyCode} className={SAFETY_CODE_STYLE[row.safetyCode]} />
                     </td>
                     {/* 야간 */}
                     <td className="px-3 py-2 text-center">
                       {row.isNightWork ? (
-                        <Moon
-                          size={12}
-                          className="inline-block text-slate-600"
-                        />
+                        <Moon size={12} className="inline-block text-slate-600" />
                       ) : (
                         <span className="text-gray-200">—</span>
                       )}

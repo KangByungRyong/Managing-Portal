@@ -7,13 +7,18 @@ interface HomeDrilldownSidebarProps {
   subtitle: string;
 }
 
-export function HomeDrilldownSidebar({ isOpen, onClose, title, subtitle }: HomeDrilldownSidebarProps) {
+export function HomeDrilldownSidebar({
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+}: HomeDrilldownSidebarProps) {
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-black/30 z-[360]" onClick={onClose} />}
 
       <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-[86%] lg:w-[52%] xl:w-[42%] bg-white shadow-2xl z-[361] transform transition-transform duration-500 ${
+        className={`fixed right-0 top-0 h-full w-[40%] bg-white shadow-2xl z-[361] transform transition-transform duration-500 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -28,7 +33,10 @@ export function HomeDrilldownSidebar({ isOpen, onClose, title, subtitle }: HomeD
             <h2 className="text-xl font-bold text-gray-900 truncate">{title}</h2>
             <p className="text-sm text-gray-500 mt-0.5 truncate">{subtitle}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/50 transition-colors"
+          >
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
