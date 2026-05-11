@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { ChevronDown, Workflow } from "lucide-react";
-import {
-  navigationConfig,
-  NavigationState,
-  TabLevel1,
-} from "../types/navigation";
+import { navigationConfig, NavigationState, TabLevel1 } from "../types/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,15 +46,11 @@ export function Navigation() {
   const [isLevel2Visible, setIsLevel2Visible] = useState(false);
   const networkTools = ["NSR", "LM 대시보드", "중부ATDT포털"] as const;
 
-  const { level1: activeLevel1, level2: activeLevel2 } = parseActiveKeys(
-    location.pathname,
-  );
+  const { level1: activeLevel1, level2: activeLevel2 } = parseActiveKeys(location.pathname);
 
   const level1Tabs = Object.keys(navigationConfig) as TabLevel1[];
   const level1Config = (navigationConfig as any)[activeLevel1] ?? navigationConfig.home;
-  const level2Tabs: string[] = level1Config.children
-    ? Object.keys(level1Config.children)
-    : [];
+  const level2Tabs: string[] = level1Config.children ? Object.keys(level1Config.children) : [];
 
   useEffect(() => {
     setIsNavExpanded(isLevel2Visible && level2Tabs.length > 0);
@@ -103,10 +95,7 @@ export function Navigation() {
                 <ChevronDown className="size-4 text-slate-500" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="min-w-[180px] border-slate-200"
-            >
+            <DropdownMenuContent align="end" className="min-w-[180px] border-slate-200 z-[300]">
               {networkTools.map((tool) => (
                 <DropdownMenuItem
                   key={tool}
@@ -138,23 +127,18 @@ export function Navigation() {
                 key={tab}
                 onClick={() => navigate(buildLevel2Path(activeLevel1, tab))}
                 className={`px-3.5 py-1.5 text-sm font-medium rounded-full border transition-all ${
-                  isActive
-                    ? "text-white font-bold"
-                    : "border-transparent hover:bg-white"
+                  isActive ? "text-white font-bold" : "border-transparent hover:bg-white"
                 }`}
                 style={
                   isActive
                     ? {
-                        backgroundColor:
-                          "var(--region-primary)",
+                        backgroundColor: "var(--region-primary)",
                         borderColor: "var(--region-primary)",
                       }
                     : { color: "var(--region-primary)" }
                 }
               >
-                {config.icon && (
-                  <span className="mr-1.5">{config.icon}</span>
-                )}
+                {config.icon && <span className="mr-1.5">{config.icon}</span>}
                 {config.label}
               </button>
             );

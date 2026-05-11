@@ -69,6 +69,8 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
   const [sdkStatus, setSdkStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [sdkMessage, setSdkMessage] = useState("Kakao SDK 준비 전");
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<KakaoMap | null>(null);
+  const overlaysRef = useRef<KakaoCustomOverlay[]>([]);
   const kakaoAppKey = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 
   const positionedStations = useMemo(
@@ -111,6 +113,10 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
     return { lat, lng, level };
   }, [positionedStations]);
 
+  // mapCenter를 ref로 동기화해 Effect 내에서 최신값 참조 (Effect deps에 추가 불필요)
+  const mapCenterRef = useRef(mapCenter);
+  mapCenterRef.current = mapCenter;
+
   useEffect(() => {
     if (!kakaoAppKey) {
       setSdkStatus("error");
@@ -139,14 +145,14 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
     };
   }, [kakaoAppKey]);
 
+  // Effect 1: 지도 인스턴스 생성 — SDK ready 시 1회만 실행
   useEffect(() => {
-    if (sdkStatus !== "ready" || !mapContainerRef.current || !window.kakao?.maps) {
-      return;
-    }
+    if (sdkStatus !== "ready" || !mapContainerRef.current || !window.kakao?.maps) return;
 
+    const center = mapCenterRef.current;
     const map = new window.kakao.maps.Map(mapContainerRef.current, {
-      center: new window.kakao.maps.LatLng(mapCenter.lat, mapCenter.lng),
-      level: mapCenter.level,
+      center: new window.kakao.maps.LatLng(center.lat, center.lng),
+      level: center.level,
       draggable: true,
       scrollwheel: true,
       disableDoubleClick: false,
@@ -154,13 +160,32 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
       keyboardShortcuts: true,
     });
 
+    mapRef.current = map;
+
+    return () => {
+      // 컴포넌트 언마운트(페이지 이탈) 시 인스턴스 정리
+      overlaysRef.current.forEach((o) => o.setMap(null));
+      overlaysRef.current = [];
+      mapRef.current = null;
+    };
+  }, [sdkStatus]);
+
+  // Effect 2: 오버레이만 교체 — 지도 인스턴스는 재생성하지 않음
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || sdkStatus !== "ready") return;
+
+    // 기존 오버레이 제거
+    overlaysRef.current.forEach((o) => o.setMap(null));
+    overlaysRef.current = [];
+
     const statusColorMap = {
       정상: "#2563EB",
       점검필요: "#F59E0B",
       긴급: "#DC2626",
     } as const;
 
-    const overlays = positionedStations.map((station) => {
+    const newOverlays = positionedStations.map((station) => {
       const color = statusColorMap[station.status];
       const content = `
         <div title="${station.name} (${station.status})" style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-4px);cursor:pointer;pointer-events:none;">
@@ -173,22 +198,19 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
 
       const overlay = new window.kakao.maps.CustomOverlay({
         position: new window.kakao.maps.LatLng(
-          station.lat ?? mapCenter.lat,
-          station.lng ?? mapCenter.lng,
+          station.lat ?? mapCenterRef.current.lat,
+          station.lng ?? mapCenterRef.current.lng,
         ),
         content,
         xAnchor: 0.5,
         yAnchor: 1,
       });
-
-      overlay.setMap(map);
       return overlay;
     });
 
-    return () => {
-      overlays.forEach((overlay) => overlay.setMap(null));
-    };
-  }, [mapCenter, positionedStations, sdkStatus]);
+    newOverlays.forEach((o) => o.setMap(map));
+    overlaysRef.current = newOverlays;
+  }, [sdkStatus, positionedStations]);
 
   const statusCounts = useMemo(
     () => ({
@@ -237,7 +259,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
         )}
 
         {/* 범례 */}
-        <div className="absolute bottom-2.5 left-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md pointer-events-none">
+        <div className="absolute bottom-2.5 left-2.5 z-[10] bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md pointer-events-none">
           <div className="flex items-center gap-1.5 mb-1">
             <div
               className="w-2 h-2 rounded-full"
@@ -256,7 +278,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
         </div>
 
         {/* 카운터 */}
-        <div className="absolute top-2.5 right-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md font-mono pointer-events-none">
+        <div className="absolute top-2.5 right-2.5 z-[10] bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md font-mono pointer-events-none">
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-gray-500">정상</span>
             <span className="font-bold text-gray-900">{statusCounts.정상}</span>

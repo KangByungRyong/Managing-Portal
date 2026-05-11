@@ -62,6 +62,9 @@ export function StateDistributionMapCard({
   const [sdkStatus, setSdkStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [sdkMessage, setSdkMessage] = useState("Kakao SDK 준비 전");
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<KakaoMap | null>(null);
+  const overlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const initialViewSetRef = useRef(false);
   const kakaoAppKey = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 
   useEffect(() => {
@@ -120,10 +123,9 @@ export function StateDistributionMapCard({
           ? "text-rose-600 bg-rose-50 border-rose-100"
           : "text-gray-400 bg-gray-50 border-gray-100";
 
+  // Effect 1: 지도 인스턴스 생성 — SDK ready + region 변경 시에만 실행 (1회)
   useEffect(() => {
-    if (sdkStatus !== "ready" || !mapContainerRef.current || !window.kakao?.maps || !metricMeta) {
-      return;
-    }
+    if (sdkStatus !== "ready" || !mapContainerRef.current || !window.kakao?.maps) return;
 
     const mapConfig = MAP_VIEW[region];
     const map = new window.kakao.maps.Map(mapContainerRef.current, {
@@ -136,12 +138,31 @@ export function StateDistributionMapCard({
       keyboardShortcuts: true,
     });
 
-    const overlays = stateMetrics
+    mapRef.current = map;
+    initialViewSetRef.current = false; // 페이지 진입 시마다 초기 뷰 플래그 리셋
+
+    return () => {
+      // 컴포넌트 언마운트(페이지 이탈) 시 인스턴스 정리
+      overlaysRef.current.forEach((o) => o.setMap(null));
+      overlaysRef.current = [];
+      mapRef.current = null;
+    };
+  }, [sdkStatus, region]);
+
+  // Effect 2: 오버레이만 교체 — 지도 인스턴스는 재생성하지 않음
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || sdkStatus !== "ready" || !metricMeta) return;
+
+    // 기존 오버레이 제거
+    overlaysRef.current.forEach((o) => o.setMap(null));
+    overlaysRef.current = [];
+
+    // 새 오버레이 생성
+    const newOverlays = stateMetrics
       .map((item) => {
         const coordinate = STATE_COORDINATES[item.state];
-        if (!coordinate) {
-          return null;
-        }
+        if (!coordinate) return null;
 
         const value = item.values[activeMetric] ?? 0;
         const ratio = maxValue > 0 ? value / maxValue : 0;
@@ -163,30 +184,29 @@ export function StateDistributionMapCard({
           xAnchor: 0.5,
           yAnchor: 1,
         });
-
-        overlay.setMap(map);
         return overlay;
       })
       .filter((overlay): overlay is KakaoCustomOverlay => overlay !== null);
 
-    if (fitToRegionStates) {
+    newOverlays.forEach((o) => o.setMap(map));
+    overlaysRef.current = newOverlays;
+
+    // 초기 진입 시에만 전체 지역이 보이도록 자동 zoom 조정
+    if (fitToRegionStates && !initialViewSetRef.current) {
       const positions = stateMetrics
         .map((item) => STATE_COORDINATES[item.state])
-        .filter((position): position is StateCoordinate => Boolean(position));
+        .filter((pos): pos is StateCoordinate => Boolean(pos));
 
       if (positions.length >= 2) {
         const bounds = new window.kakao.maps.LatLngBounds();
-        positions.forEach((position) => {
-          bounds.extend(new window.kakao.maps.LatLng(position.lat, position.lng));
+        positions.forEach((pos) => {
+          bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
         });
         map.setBounds(bounds);
       }
+      initialViewSetRef.current = true;
     }
-
-    return () => {
-      overlays.forEach((overlay) => overlay.setMap(null));
-    };
-  }, [activeMetric, fitToRegionStates, maxValue, metricMeta, region, sdkStatus, stateMetrics]);
+  }, [sdkStatus, stateMetrics, activeMetric, maxValue, metricMeta, fitToRegionStates]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm h-full min-h-[220px] flex flex-col">

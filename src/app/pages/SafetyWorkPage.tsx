@@ -939,14 +939,14 @@ export function SafetyWorkPage() {
             <div className="px-3.5 pt-3.5 pb-2 border-b">
               <span className="text-[15px] font-bold text-gray-700">분류별 현황</span>
             </div>
-            <div className="p-3 space-y-2">
+            <div className="p-2.5 space-y-2">
               {ALL_CATEGORIES.map((cat) => {
                 const count = kpi.byCategory[cat];
                 const pct = kpi.total > 0 ? (count / kpi.total) * 100 : 0;
                 return (
                   <div key={cat}>
-                    <div className="flex justify-between text-xs mb-0.5">
-                      <span className="text-gray-600">{cat}</span>
+                    <div className="flex justify-between text-[13px] mb-0.5">
+                      <span className="font-bold text-gray-600">{cat}</span>
                       <span className="font-mono font-semibold text-gray-800">{count}건</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -967,21 +967,21 @@ export function SafetyWorkPage() {
 
           {/* 작업 Level별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="px-3.5 pt-3.5 pb-2 border-b">
+            <div className="px-3.5 pt-3.5 pb-2 border-b flex items-baseline gap-1.5">
               <span className="text-[15px] font-bold text-gray-700">작업 Level별 현황</span>
+              <span className="text-[11px] text-gray-600">(건)</span>
             </div>
-            <div className="p-3 grid grid-cols-4 gap-2 border-b border-gray-100">
-              {([1, 2, 3, 4] as const).map((level) => (
-                <div key={level} className="flex flex-col items-center gap-0.5">
+            <div className="py-5 px-3 grid grid-cols-3 gap-2 border-b border-gray-100">
+              {([1, 2, 3] as const).map((level) => (
+                <div key={level} className="flex flex-col items-center gap-1.5">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${IMPACT_LEVEL_STYLE[level]}`}
+                    className={`inline-block px-2 py-0.5 rounded border text-[13px] font-bold ${IMPACT_LEVEL_STYLE[level]}`}
                   >
                     Level {level}
                   </span>
                   <span className="text-sm font-bold font-mono text-gray-800">
                     {kpi.byImpact[level]}
                   </span>
-                  <span className="text-[9px] text-gray-400">건</span>
                 </div>
               ))}
             </div>
@@ -989,21 +989,21 @@ export function SafetyWorkPage() {
 
           {/* 안전코드별 */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="px-3.5 pt-3.5 pb-2 border-b">
+            <div className="px-3.5 pt-3.5 pb-2 border-b flex items-baseline gap-1.5">
               <span className="text-[15px] font-bold text-gray-700">안전코드별 현황</span>
+              <span className="text-[11px] text-gray-600">(건)</span>
             </div>
-            <div className="p-3 grid grid-cols-4 gap-2 border-b border-gray-100">
+            <div className="py-5 px-3 grid grid-cols-4 gap-2 border-b border-gray-100">
               {(["C1", "C2", "C3", "C4"] as SafetyCode[]).map((code) => (
-                <div key={code} className="flex flex-col items-center gap-0.5">
+                <div key={code} className="flex flex-col items-center gap-1.5">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${SAFETY_CODE_STYLE[code]}`}
+                    className={`inline-block px-2 py-0.5 rounded border text-[13px] font-bold ${SAFETY_CODE_STYLE[code]}`}
                   >
                     {code}
                   </span>
                   <span className="text-sm font-bold font-mono text-gray-800">
                     {kpi.bySafetyCode[code]}
                   </span>
-                  <span className="text-[9px] text-gray-400">건</span>
                 </div>
               ))}
             </div>
