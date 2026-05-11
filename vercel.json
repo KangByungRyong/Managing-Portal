@@ -1,0 +1,14 @@
+{
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_KAKAO_MAP_APP_KEY": {
+      "description": "Kakao Maps API Key for map functionality",
+      "required": true
+    }
+  },
+  "envPrefix": "VITE_"
+}
