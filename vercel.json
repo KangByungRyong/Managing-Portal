@@ -3,5 +3,11 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": "vite",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
