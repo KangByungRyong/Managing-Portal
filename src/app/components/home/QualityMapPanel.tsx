@@ -1,6 +1,7 @@
 // src/app/components/home/QualityMapPanel.tsx
 import { useEffect, useRef, useState } from "react";
 import { DistrictQualityItem, getRegionalDistricts } from "../../data/homeMockData";
+import { loadKakaoMapsSdk } from "../../lib/loadKakaoMapsSdk";
 
 interface QualityMapPanelProps {
   region: "central" | "west";
@@ -17,6 +18,9 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
   const mapContainer = useRef<HTMLDivElement>(null);
   const kakaoMapRef = useRef<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictQualityItem | null>(null);
+  const [sdkStatus, setSdkStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [sdkMessage, setSdkMessage] = useState("Kakao SDK 준비 전");
+  const kakaoAppKey = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 
   const allDistricts = getRegionalDistricts(region);
   // Worst 5 (grade1stRate 낮은 순)
@@ -32,15 +36,41 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
   };
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!kakaoAppKey) {
+      setSdkStatus("error");
+      setSdkMessage("VITE_KAKAO_MAP_APP_KEY 미설정");
+      return;
+    }
+
+    let isMounted = true;
+    setSdkStatus("loading");
+    setSdkMessage("Kakao SDK 로딩 중");
+
+    loadKakaoMapsSdk(kakaoAppKey)
+      .then(() => {
+        if (!isMounted) return;
+        setSdkStatus("ready");
+        setSdkMessage("Kakao SDK 준비 완료");
+      })
+      .catch((error: Error) => {
+        if (!isMounted) return;
+        setSdkStatus("error");
+        setSdkMessage(error.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [kakaoAppKey]);
+
+  useEffect(() => {
+    if (!mapContainer.current || sdkStatus !== "ready") return;
 
     const initMap = () => {
       if (!mapContainer.current || !window.kakao?.maps) return;
 
       const districts = getRegionalDistricts(region);
-      const center = region === "central"
-        ? { lat: 36.5, lng: 127.3 }
-        : { lat: 35.15, lng: 127.0 };
+      const center = region === "central" ? { lat: 36.5, lng: 127.3 } : { lat: 35.15, lng: 127.0 };
 
       const options = {
         center: new window.kakao.maps.LatLng(center.lat, center.lng),
@@ -50,9 +80,7 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
       kakaoMapRef.current = kakaoMap;
 
       // Worst 5 마커만 지도에 표시
-      const worst5 = [...districts]
-        .sort((a, b) => a.grade1stRate - b.grade1stRate)
-        .slice(0, 5);
+      const worst5 = [...districts].sort((a, b) => a.grade1stRate - b.grade1stRate).slice(0, 5);
 
       // LatLngBounds로 5개 마커 모두 보이도록 초기 줌 설정
       const bounds = new window.kakao.maps.LatLngBounds();
@@ -67,10 +95,10 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
         // 순위 라벨 커스텀 마커
         const markerImage = new window.kakao.maps.MarkerImage(
           `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-            `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='36'><ellipse cx='14' cy='14' rx='14' ry='14' fill='%23ef4444'/><text x='14' y='19' text-anchor='middle' fill='white' font-size='13' font-weight='bold' font-family='sans-serif'>${idx + 1}</text><polygon points='8,24 20,24 14,36' fill='%23ef4444'/></svg>`
+            `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='36'><ellipse cx='14' cy='14' rx='14' ry='14' fill='%23ef4444'/><text x='14' y='19' text-anchor='middle' fill='white' font-size='13' font-weight='bold' font-family='sans-serif'>${idx + 1}</text><polygon points='8,24 20,24 14,36' fill='%23ef4444'/></svg>`,
           )}`,
           new window.kakao.maps.Size(28, 36),
-          { offset: new window.kakao.maps.Point(14, 36) }
+          { offset: new window.kakao.maps.Point(14, 36) },
         );
 
         const marker = new window.kakao.maps.Marker({
@@ -101,18 +129,18 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
       });
     };
 
-    // kakao.maps.load()를 통해 API 준비 완료 후 초기화
-    if (window.kakao?.maps) {
-      initMap();
-    } else if (window.kakao) {
-      window.kakao.maps.load(initMap);
-    } else {
-      // SDK 스크립트 로드 대기 (최대 3초)
-      const timer = window.setTimeout(initMap, 300);
-      return () => window.clearTimeout(timer);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [region]);
+    initMap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [region, sdkStatus]);
+
+  const sdkToneClass =
+    sdkStatus === "ready"
+      ? "text-emerald-600 bg-emerald-50 border-emerald-100"
+      : sdkStatus === "loading"
+        ? "text-amber-600 bg-amber-50 border-amber-100"
+        : sdkStatus === "error"
+          ? "text-rose-600 bg-rose-50 border-rose-100"
+          : "text-gray-400 bg-gray-50 border-gray-100";
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col gap-2 h-full overflow-hidden">
@@ -123,6 +151,11 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
           {region === "central" ? "중부 본부" : "서부 본부"} 시군구별 품질 현황
         </span>
         <span className="text-xs text-gray-500 ml-1">Quality by District</span>
+        <span
+          className={`ml-auto rounded-full border px-2 py-1 text-[10px] font-semibold ${sdkToneClass}`}
+        >
+          {sdkMessage}
+        </span>
       </div>
 
       {/* Worst 5 목록 — 상단 고정 */}
@@ -133,7 +166,9 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
         {selectedDistrict && (
           <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 mb-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-gray-700 truncate">{selectedDistrict.name}</span>
+              <span className="text-xs font-semibold text-gray-700 truncate">
+                {selectedDistrict.name}
+              </span>
               <button
                 onClick={() => setSelectedDistrict(null)}
                 className="text-gray-400 hover:text-gray-600 ml-1 shrink-0 text-sm"
@@ -171,8 +206,13 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
             >
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="text-[10px] font-bold text-red-500">{idx + 1}</span>
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: district.color }} />
-                <span className="text-gray-700 font-medium truncate text-[10px]">{district.name}</span>
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: district.color }}
+                />
+                <span className="text-gray-700 font-medium truncate text-[10px]">
+                  {district.name}
+                </span>
               </div>
               <div className="text-right">
                 <span className="text-red-600 tabular-nums font-semibold text-[11px]">
@@ -191,6 +231,15 @@ export function QualityMapPanel({ region, onSelectWorstDistrict }: QualityMapPan
           className="h-full w-full rounded-lg border border-gray-200"
           style={{ minHeight: 140 }}
         />
+
+        {sdkStatus !== "ready" && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-50/90 backdrop-blur-[1px]">
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-center shadow-sm">
+              <div className="text-[11px] font-bold text-gray-700">지도 준비 중</div>
+              <div className="mt-1 text-[10px] text-gray-500">{sdkMessage}</div>
+            </div>
+          </div>
+        )}
 
         {/* Map 내 우측 하단 Legend */}
         <div className="absolute bottom-2 right-2 z-10 rounded-md border border-gray-200 bg-white/95 px-2 py-1.5 shadow-sm backdrop-blur-sm">
