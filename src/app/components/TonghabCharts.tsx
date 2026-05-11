@@ -15,16 +15,16 @@ interface DonutChartProps {
 }
 
 export function DonutChart({ title, data, chartId }: DonutChartProps) {
-  const id = useMemo(() => chartId || `chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, [chartId]);
+  const id = useMemo(
+    () => chartId || `chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    [chartId],
+  );
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-3.5 h-full">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-          <div
-            className="w-0.5 h-3 rounded"
-            style={{ backgroundColor: "var(--region-primary)" }}
-          />
+          <div className="w-0.5 h-3 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
           {title}
         </div>
         <span className="text-[10px] text-gray-300">📂 SQL</span>
@@ -47,10 +47,7 @@ export function DonutChart({ title, data, chartId }: DonutChartProps) {
             ))}
           </Pie>
           <Tooltip />
-          <Legend
-            iconSize={8}
-            wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
-          />
+          <Legend iconSize={8} wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -75,8 +72,11 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
   const kakaoAppKey = import.meta.env.VITE_KAKAO_MAP_APP_KEY;
 
   const positionedStations = useMemo(
-    () => stations.filter((station) => typeof station.lat === "number" && typeof station.lng === "number"),
-    [stations]
+    () =>
+      stations.filter(
+        (station) => typeof station.lat === "number" && typeof station.lng === "number",
+      ),
+    [stations],
   );
 
   const mapCenter = useMemo(() => {
@@ -89,13 +89,17 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
         lat: acc.lat + (station.lat ?? 0),
         lng: acc.lng + (station.lng ?? 0),
       }),
-      { lat: 0, lng: 0 }
+      { lat: 0, lng: 0 },
     );
 
     const lat = sum.lat / positionedStations.length;
     const lng = sum.lng / positionedStations.length;
-    const latSpread = Math.max(...positionedStations.map((station) => station.lat ?? lat)) - Math.min(...positionedStations.map((station) => station.lat ?? lat));
-    const lngSpread = Math.max(...positionedStations.map((station) => station.lng ?? lng)) - Math.min(...positionedStations.map((station) => station.lng ?? lng));
+    const latSpread =
+      Math.max(...positionedStations.map((station) => station.lat ?? lat)) -
+      Math.min(...positionedStations.map((station) => station.lat ?? lat));
+    const lngSpread =
+      Math.max(...positionedStations.map((station) => station.lng ?? lng)) -
+      Math.min(...positionedStations.map((station) => station.lng ?? lng));
     const maxSpread = Math.max(latSpread, lngSpread);
 
     let level = 12;
@@ -143,6 +147,11 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
     const map = new window.kakao.maps.Map(mapContainerRef.current, {
       center: new window.kakao.maps.LatLng(mapCenter.lat, mapCenter.lng),
       level: mapCenter.level,
+      draggable: true,
+      scrollwheel: true,
+      disableDoubleClick: false,
+      disableDoubleClickZoom: false,
+      keyboardShortcuts: true,
     });
 
     const statusColorMap = {
@@ -154,7 +163,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
     const overlays = positionedStations.map((station) => {
       const color = statusColorMap[station.status];
       const content = `
-        <div title="${station.name} (${station.status})" style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-4px);cursor:pointer;">
+        <div title="${station.name} (${station.status})" style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-4px);cursor:pointer;pointer-events:none;">
           <div style="padding:3px 7px;border-radius:999px;background:rgba(15,23,42,0.88);color:white;font-size:10px;font-weight:700;line-height:1;white-space:nowrap;box-shadow:0 8px 18px rgba(15,23,42,0.18);">
             ${station.name}
           </div>
@@ -163,7 +172,10 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
       `;
 
       const overlay = new window.kakao.maps.CustomOverlay({
-        position: new window.kakao.maps.LatLng(station.lat ?? mapCenter.lat, station.lng ?? mapCenter.lng),
+        position: new window.kakao.maps.LatLng(
+          station.lat ?? mapCenter.lat,
+          station.lng ?? mapCenter.lng,
+        ),
         content,
         xAnchor: 0.5,
         yAnchor: 1,
@@ -184,7 +196,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
       점검필요: stations.filter((s) => s.status === "점검필요").length,
       긴급: stations.filter((s) => s.status === "긴급").length,
     }),
-    [stations]
+    [stations],
   );
   const sdkToneClass =
     sdkStatus === "ready"
@@ -199,10 +211,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
     <div className="bg-white rounded-lg shadow-sm p-3.5 h-full">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-          <div
-            className="w-0.5 h-3 rounded"
-            style={{ backgroundColor: "var(--region-primary)" }}
-          />
+          <div className="w-0.5 h-3 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
           통합국 위치 현황
         </div>
         <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${sdkToneClass}`}>
@@ -228,7 +237,7 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
         )}
 
         {/* 범례 */}
-        <div className="absolute bottom-2.5 left-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md">
+        <div className="absolute bottom-2.5 left-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md pointer-events-none">
           <div className="flex items-center gap-1.5 mb-1">
             <div
               className="w-2 h-2 rounded-full"
@@ -237,23 +246,17 @@ export function MapPlaceholder({ stationCount, stations }: MapPlaceholderProps) 
             <span className="text-gray-700">정상</span>
           </div>
           <div className="flex items-center gap-1.5 mb-1">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "var(--warn)" }}
-            />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--warn)" }} />
             <span className="text-gray-700">점검필요</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "var(--danger)" }}
-            />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--danger)" }} />
             <span className="text-gray-700">긴급</span>
           </div>
         </div>
 
         {/* 카운터 */}
-        <div className="absolute top-2.5 right-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md font-mono">
+        <div className="absolute top-2.5 right-2.5 bg-white/95 rounded-lg px-2.5 py-2 text-[10px] shadow-md font-mono pointer-events-none">
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-gray-500">정상</span>
             <span className="font-bold text-gray-900">{statusCounts.정상}</span>
@@ -287,10 +290,7 @@ export function HorizontalBarChart({ title, data }: HorizontalBarChartProps) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-        <div
-          className="w-0.5 h-3 rounded"
-          style={{ backgroundColor: "var(--region-primary)" }}
-        />
+        <div className="w-0.5 h-3 rounded" style={{ backgroundColor: "var(--region-primary)" }} />
         {title}
       </div>
       <div className="flex rounded-lg overflow-hidden border border-gray-200 h-10">

@@ -56,7 +56,9 @@ export function StateDistributionMapCard({
   showTotalBadge = true,
   fitToRegionStates = false,
 }: StateDistributionMapCardProps) {
-  const [activeMetric, setActiveMetric] = useState<string>(initialMetricKey ?? metrics[0]?.key ?? "");
+  const [activeMetric, setActiveMetric] = useState<string>(
+    initialMetricKey ?? metrics[0]?.key ?? "",
+  );
   const [sdkStatus, setSdkStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [sdkMessage, setSdkMessage] = useState("Kakao SDK 준비 전");
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -101,12 +103,13 @@ export function StateDistributionMapCard({
   }, [activeMetric, metrics]);
 
   const stateMetrics = useMemo(() => {
-    return [...rows].sort(
-      (a, b) => (b.values[activeMetric] ?? 0) - (a.values[activeMetric] ?? 0)
-    );
+    return [...rows].sort((a, b) => (b.values[activeMetric] ?? 0) - (a.values[activeMetric] ?? 0));
   }, [activeMetric, rows]);
 
-  const maxValue = stateMetrics.length > 0 ? Math.max(...stateMetrics.map((item) => item.values[activeMetric] ?? 0)) : 0;
+  const maxValue =
+    stateMetrics.length > 0
+      ? Math.max(...stateMetrics.map((item) => item.values[activeMetric] ?? 0))
+      : 0;
   const totalValue = stateMetrics.reduce((sum, item) => sum + (item.values[activeMetric] ?? 0), 0);
   const sdkToneClass =
     sdkStatus === "ready"
@@ -126,6 +129,11 @@ export function StateDistributionMapCard({
     const map = new window.kakao.maps.Map(mapContainerRef.current, {
       center: new window.kakao.maps.LatLng(mapConfig.center.lat, mapConfig.center.lng),
       level: mapConfig.level,
+      draggable: true,
+      scrollwheel: true,
+      disableDoubleClick: false,
+      disableDoubleClickZoom: false,
+      keyboardShortcuts: true,
     });
 
     const overlays = stateMetrics
@@ -139,7 +147,7 @@ export function StateDistributionMapCard({
         const ratio = maxValue > 0 ? value / maxValue : 0;
         const size = Math.round(42 + ratio * 28);
         const content = `
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-6px);">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-6px);pointer-events:none;">
             <div style="padding:2px 6px;border-radius:999px;background:rgba(255,255,255,0.92);border:1px solid rgba(255,255,255,0.95);box-shadow:0 6px 18px rgba(15,23,42,0.12);font-size:10px;font-weight:700;color:#334155;white-space:nowrap;">
               ${item.state}
             </div>
@@ -190,7 +198,9 @@ export function StateDistributionMapCard({
       {/* 지표 선택 및 SDK 상태 */}
       <div className="px-3.5 pt-3 pb-2 flex-shrink-0">
         <div className="flex justify-between items-center gap-3">
-          <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${sdkToneClass}`}>
+          <span
+            className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${sdkToneClass}`}
+          >
             {sdkMessage}
           </span>
         </div>
@@ -234,7 +244,8 @@ export function StateDistributionMapCard({
               className="col-span-7 rounded-xl border relative overflow-hidden"
               style={{
                 borderColor: "var(--region-border)",
-                background: "linear-gradient(180deg, rgba(248,250,252,0.96), rgba(226,232,240,0.9))",
+                background:
+                  "linear-gradient(180deg, rgba(248,250,252,0.96), rgba(226,232,240,0.9))",
               }}
             >
               <div ref={mapContainerRef} className="absolute inset-0" />
@@ -248,13 +259,17 @@ export function StateDistributionMapCard({
                 </div>
               )}
 
-              <div className="absolute left-2.5 top-2.5 rounded-lg bg-white/85 px-2 py-1.5 shadow-sm">
-                <div className="text-[10px] font-semibold text-gray-700">{region === "central" ? "중부권" : "서부권"}</div>
-                <div className="text-[10px] text-gray-500">{metricMeta?.label ?? "지표"} 기준 표시</div>
+              <div className="absolute left-2.5 top-2.5 rounded-lg bg-white/85 px-2 py-1.5 shadow-sm pointer-events-none">
+                <div className="text-[10px] font-semibold text-gray-700">
+                  {region === "central" ? "중부권" : "서부권"}
+                </div>
+                <div className="text-[10px] text-gray-500">
+                  {metricMeta?.label ?? "지표"} 기준 표시
+                </div>
               </div>
 
               {showTotalBadge && (
-                <div className="absolute right-2.5 bottom-2.5 rounded-lg bg-white/88 px-2.5 py-2 shadow-sm text-[10px] font-mono">
+                <div className="absolute right-2.5 bottom-2.5 rounded-lg bg-white/88 px-2.5 py-2 shadow-sm text-[10px] font-mono pointer-events-none">
                   <div className="flex justify-between gap-4 text-gray-500">
                     <span>합계</span>
                     <span className="font-bold text-gray-900">{totalValue.toLocaleString()}</span>
@@ -315,13 +330,17 @@ export function StateDistributionMapCard({
               </div>
             )}
 
-            <div className="absolute left-2.5 top-2.5 rounded-lg bg-white/85 px-2 py-1.5 shadow-sm">
-              <div className="text-[10px] font-semibold text-gray-700">{region === "central" ? "중부권" : "서부권"}</div>
-              <div className="text-[10px] text-gray-500">{metricMeta?.label ?? "지표"} 기준 표시</div>
+            <div className="absolute left-2.5 top-2.5 rounded-lg bg-white/85 px-2 py-1.5 shadow-sm pointer-events-none">
+              <div className="text-[10px] font-semibold text-gray-700">
+                {region === "central" ? "중부권" : "서부권"}
+              </div>
+              <div className="text-[10px] text-gray-500">
+                {metricMeta?.label ?? "지표"} 기준 표시
+              </div>
             </div>
 
             {showTotalBadge && (
-              <div className="absolute right-2.5 bottom-2.5 rounded-lg bg-white/88 px-2.5 py-2 shadow-sm text-[10px] font-mono">
+              <div className="absolute right-2.5 bottom-2.5 rounded-lg bg-white/88 px-2.5 py-2 shadow-sm text-[10px] font-mono pointer-events-none">
                 <div className="flex justify-between gap-4 text-gray-500">
                   <span>합계</span>
                   <span className="font-bold text-gray-900">{totalValue.toLocaleString()}</span>

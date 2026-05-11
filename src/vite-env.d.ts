@@ -18,6 +18,16 @@ interface KakaoMap {
   setBounds(bounds: KakaoLatLngBounds): void;
 }
 
+interface KakaoMapOptions {
+  center: KakaoLatLng;
+  level: number;
+  draggable?: boolean;
+  scrollwheel?: boolean;
+  disableDoubleClick?: boolean;
+  disableDoubleClickZoom?: boolean;
+  keyboardShortcuts?: boolean;
+}
+
 interface KakaoLatLngBounds {
   extend(latlng: KakaoLatLng): void;
 }
@@ -30,7 +40,7 @@ interface KakaoMapsNamespace {
   load(callback: () => void): void;
   LatLng: new (lat: number, lng: number) => KakaoLatLng;
   LatLngBounds: new () => KakaoLatLngBounds;
-  Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMap;
+  Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
   CustomOverlay: new (options: {
     position: KakaoLatLng;
     content: string | HTMLElement;
